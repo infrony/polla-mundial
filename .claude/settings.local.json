@@ -10,7 +10,8 @@
       "Bash(pkill -f \"next dev\")",
       "Read(//tmp/**)",
       "PowerShell(Stop-Process *)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "PowerShell(Copy-Item *)"
     ]
   }
 }

@@ -27,12 +27,7 @@ export default async function AppLayout({ children }) {
       <header>
         <div className="header-inner">
           <div className="logo-block">
-            <svg className="trophy-svg" viewBox="0 0 100 100" fill="none">
-              <path d="M50 10 L60 35 H85 L65 55 L72 80 L50 65 L28 80 L35 55 L15 35 H40 Z" fill="#F5A623" opacity="0.9"/>
-              <circle cx="50" cy="50" r="22" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
-              <path d="M30 88 H70" stroke="#F5A623" strokeWidth="3" strokeLinecap="round"/>
-              <path d="M50 80 V88" stroke="#F5A623" strokeWidth="3" strokeLinecap="round"/>
-            </svg>
+            <img src="/logo.png" alt="FIFA World Cup 2026" style={{ width: 42, height: 42 }} />
             <div>
               <div className="header-title">Polla Mundial</div>
               <div className="header-subtitle">EEUU · México · Canadá 2026</div>

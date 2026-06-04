@@ -99,9 +99,7 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
       <header>
         <div className="header-inner" style={{ maxWidth: '1100px' }}>
           <div className="logo-block">
-            <svg className="trophy-svg" viewBox="0 0 100 100" fill="none">
-              <path d="M50 10 L60 35 H85 L65 55 L72 80 L50 65 L28 80 L35 55 L15 35 H40 Z" fill="#F5A623" opacity="0.9"/>
-            </svg>
+            <img src="/logo.png" alt="FIFA World Cup 2026" style={{ width: 42, height: 42 }} />
             <div>
               <div className="header-title">Admin Panel</div>
               <div className="header-subtitle">Polla Mundial 2026</div>

@@ -35,6 +35,7 @@ export default function LoginPage() {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-logo">
+          <img src="/logo.png" alt="FIFA World Cup 2026" style={{ width: 72, height: 72, marginBottom: 8 }} />
           <span className="header-title">Polla Mundial</span>
           <span className="header-subtitle">EEUU · México · Canadá 2026</span>
         </div>
