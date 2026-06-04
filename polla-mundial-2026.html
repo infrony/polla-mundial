@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polla Mundial 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C8102E;
+    --blue: #003DA5;
+    --gold: #F5A623;
+    --white: #FAFAFA;
+    --dark: #0A0A14;
+    --card-bg: #12121F;
+    --border: rgba(255,255,255,0.08);
+    --success: #2ECC71;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === HEADER === */
+  header {
+    background: linear-gradient(135deg, var(--blue) 0%, #001a5e 50%, var(--red) 100%);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.6);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .logo-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .trophy-svg {
+    width: 38px;
+    height: 38px;
+    filter: drop-shadow(0 0 8px var(--gold));
+  }
+
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    line-height: 1;
+    color: var(--white);
+  }
+  .header-subtitle {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .score-pill {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    color: var(--gold);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .score-pill span { font-size: 0.65rem; letter-spacing: 2px; color: rgba(255,255,255,0.5); }
+
+  /* === NAV === */
+  nav {
+    background: #0d0d1a;
+    border-bottom: 2px solid var(--red);
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 4px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    white-space: nowrap;
+  }
+  .nav-btn.active {
+    color: var(--gold);
+  }
+  .nav-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 10%; right: 10%;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 2px;
+  }
+
+  /* === MAIN === */
+  main {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  /* === SECTION HEADER === */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    color: var(--white);
+  }
+  .badge {
+    background: var(--red);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white);
+  }
+  .badge.gold { background: var(--gold); color: var(--dark); }
+  .badge.blue { background: var(--blue); }
+
+  /* === MATCH CARD === */
+  .match-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .match-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--group-color, var(--blue)), transparent);
+  }
+  .match-card:hover { border-color: rgba(255,255,255,0.18); }
+
+  .match-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .match-date {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+  }
+  .group-tag {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.5);
+  }
+
+  .match-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .team-flag {
+    font-size: 1.8rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+  .team-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-align: center;
+    color: rgba(255,255,255,0.9);
+    max-width: 100px;
+  }
+  .team.right { align-items: center; }
+
+  .vs-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .vs-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 2px;
+  }
+
+  /* RESULT SELECTOR */
+  .result-selector {
+    display: flex;
+    gap: 4px;
+    margin-top: 12px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 4px;
+  }
+  .result-btn {
+    flex: 1;
+    padding: 6px 4px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .result-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+  .result-btn.selected-1 { background: var(--blue); border-color: var(--blue); color: var(--white); }
+  .result-btn.selected-x { background: #555; border-color: #666; color: var(--white); }
+  .result-btn.selected-2 { background: var(--red); border-color: var(--red); color: var(--white); }
+  .result-btn.correct { background: var(--success) !important; border-color: var(--success) !important; color: var(--dark) !important; }
+
+  .match-card.locked { opacity: 0.7; pointer-events: none; }
+  .match-card.locked .result-btn { cursor: default; }
+
+  /* === GROUPS TAB === */
+  .groups-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .group-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .group-card:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+  .group-header {
+    padding: 8px 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .group-header small {
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.6rem;
+    opacity: 0.6;
+    letter-spacing: 1px;
+  }
+  .group-teams-list {
+    padding: 8px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .group-team-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.7);
+  }
+  .group-team-row .flag { font-size: 1rem; }
+  .qualified-inputs {
+    padding: 8px 12px 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .qualified-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 2px;
+  }
+  .qualified-select {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--white);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    padding: 5px 8px;
+    width: 100%;
+    cursor: pointer;
+    -webkit-appearance: none;
+  }
+  .qualified-select:focus { outline: none; border-color: var(--gold); }
+  .pos-row { display: flex; align-items: center; gap: 6px; }
+  .pos-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    color: var(--gold);
+    min-width: 18px;
+  }
+
+  /* === LEADERBOARD === */
+  .leaderboard-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .lb-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row:hover { background: rgba(255,255,255,0.03); }
+  .lb-pos {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    min-width: 28px;
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+  }
+  .lb-pos.gold-pos { color: #FFD700; }
+  .lb-pos.silver-pos { color: #C0C0C0; }
+  .lb-pos.bronze-pos { color: #CD7F32; }
+  .lb-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .lb-info { flex: 1; }
+  .lb-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--white);
+  }
+  .lb-detail {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.5px;
+  }
+  .lb-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .lb-pts {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.3);
+    text-align: right;
+    margin-top: -2px;
+    letter-spacing: 1px;
+  }
+
+  /* === ME ROW highlight === */
+  .lb-row.me {
+    background: linear-gradient(90deg, rgba(0,61,165,0.15), transparent);
+    border-left: 3px solid var(--blue);
+  }
+
+  /* === STATS === */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-top: 3px;
+  }
+
+  /* === PROGRESS BAR === */
+  .progress-wrap { margin-bottom: 14px; }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.4);
+  }
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--red));
+    transition: width 0.5s ease;
+  }
+
+  /* === PAGE === */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .page.active .match-card,
+  .page.active .group-card,
+  .page.active .lb-row,
+  .page.active .stat-card {
+    animation: fadeUp 0.3s ease backwards;
+  }
+  .page.active .match-card:nth-child(1) { animation-delay: 0.05s; }
+  .page.active .match-card:nth-child(2) { animation-delay: 0.1s; }
+  .page.active .match-card:nth-child(3) { animation-delay: 0.15s; }
+  .page.active .match-card:nth-child(4) { animation-delay: 0.2s; }
+  .page.active .match-card:nth-child(5) { animation-delay: 0.25s; }
+
+  /* Floating save button */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: linear-gradient(135deg, var(--blue), var(--red));
+    border: none;
+    border-radius: 50px;
+    padding: 12px 22px;
+    color: var(--white);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .fab:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+  .fab.saved { background: linear-gradient(135deg, #1a6e3c, #2ecc71); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(20,20,35,0.95);
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: var(--gold);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .world-strip {
+    background: linear-gradient(90deg, var(--red), var(--blue));
+    height: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div class="world-strip"></div>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <svg class="trophy-svg" viewBox="0 0 100 100" fill="none">
+        <path d="M50 10 L60 35 H85 L65 55 L72 80 L50 65 L28 80 L35 55 L15 35 H40 Z" fill="#F5A623" opacity="0.9"/>
+        <circle cx="50" cy="50" r="22" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+        <path d="M30 88 H70" stroke="#F5A623" stroke-width="3" stroke-linecap="round"/>
+        <path d="M50 80 V88" stroke="#F5A623" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="header-title">Polla Mundial</div>
+        <div class="header-subtitle">EEUU · México · Canadá 2026</div>
+      </div>
+    </div>
+    <div class="score-pill">
+      <span>PTS</span>
+      <span id="total-pts">0</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="showPage('partidos')">⚽ Partidos</button>
+  <button class="nav-btn" onclick="showPage('grupos')">🏆 Grupos</button>
+  <button class="nav-btn" onclick="showPage('tabla')">📊 Tabla</button>
+  <button class="nav-btn" onclick="showPage('mis-picks')">⭐ Mis Picks</button>
+</nav>
+
+<!-- PARTIDOS PAGE -->
+<main>
+<div class="page active" id="page-partidos">
+  <div class="section-header">
+    <h2>Fase de Grupos</h2>
+    <span class="badge blue">72 Partidos</span>
+  </div>
+
+  <div id="matches-list"></div>
+</div>
+
+<!-- GRUPOS PAGE -->
+<div class="page" id="page-grupos">
+  <div class="section-header">
+    <h2>Pronóstico de Grupos</h2>
+    <span class="badge gold">+1 Pt por acierto</span>
+  </div>
+  <p style="font-size:0.78rem; color:rgba(255,255,255,0.4); margin-bottom:14px; line-height:1.4;">
+    Selecciona quién clasifica 1° y 2° en cada grupo para ganar puntos extra.
+  </p>
+  <div class="groups-grid" id="groups-grid"></div>
+</div>
+
+<!-- TABLA PAGE -->
+<div class="page" id="page-tabla">
+  <div class="section-header">
+    <h2>Tabla de Posiciones</h2>
+    <span class="badge">🔴 EN VIVO</span>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">8</div>
+      <div class="stat-label">Participantes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="my-rank">—</div>
+      <div class="stat-label">Mi Posición</div>
+    </div>
+  </div>
+  <div class="leaderboard-card" id="leaderboard"></div>
+</div>
+
+<!-- MIS PICKS PAGE -->
+<div class="page" id="page-mis-picks">
+  <div class="section-header">
+    <h2>Mis Predicciones</h2>
+    <span class="badge gold">Resumen</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="pick-total">0</div>
+      <div class="stat-label">Total Picks</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="pick-pct">0%</div>
+      <div class="stat-label">Completado</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-header">
+      <span>Progreso de Pronósticos</span>
+      <span id="progress-text">0 / 72</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="section-header" style="margin-top:16px;">
+    <h2>Picks por Grupo</h2>
+  </div>
+  <div id="picks-summary"></div>
+</div>
+</main>
+
+<button class="fab" id="save-btn" onclick="savepicks()">
+  💾 Guardar Picks
+</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+const groups = {
+  A: { teams: ['México', 'Sudáfrica', 'Corea del Sur', 'R. Checa'], flag: ['🇲🇽','🇿🇦','🇰🇷','🇨🇿'], color: '#e8b500' },
+  B: { teams: ['Canadá', 'Bosnia y H.', 'Catar', 'Suiza'], flag: ['🇨🇦','🇧🇦','🇶🇦','🇨🇭'], color: '#2ecc71' },
+  C: { teams: ['Brasil', 'Marruecos', 'Haití', 'Escocia'], flag: ['🇧🇷','🇲🇦','🇭🇹','🏴󠁧󠁢󠁳󠁣󠁴󠁿'], color: '#3498db' },
+  D: { teams: ['EEUU', 'Paraguay', 'Australia', 'Turquía'], flag: ['🇺🇸','🇵🇾','🇦🇺','🇹🇷'], color: '#9b59b6' },
+  E: { teams: ['Alemania', 'Curazao', 'Costa de Marfil', 'Ecuador'], flag: ['🇩🇪','🇨🇼','🇨🇮','🇪🇨'], color: '#e74c3c' },
+  F: { teams: ['Países Bajos', 'Japón', 'Suecia', 'Túnez'], flag: ['🇳🇱','🇯🇵','🇸🇪','🇹🇳'], color: '#e67e22' },
+  G: { teams: ['Bélgica', 'Egipto', 'Irán', 'Nueva Zelanda'], flag: ['🇧🇪','🇪🇬','🇮🇷','🇳🇿'], color: '#1abc9c' },
+  H: { teams: ['España', 'Cabo Verde', 'Arabia Saudita', 'Uruguay'], flag: ['🇪🇸','🇨🇻','🇸🇦','🇺🇾'], color: '#c0392b' },
+  I: { teams: ['Francia', 'Senegal', 'Irak', 'Noruega'], flag: ['🇫🇷','🇸🇳','🇮🇶','🇳🇴'], color: '#2980b9' },
+  J: { teams: ['Argentina', 'Argelia', 'Austria', 'Jordania'], flag: ['🇦🇷','🇩🇿','🇦🇹','🇯🇴'], color: '#16a085' },
+  K: { teams: ['Portugal', 'RD Congo', 'Uzbekistán', 'Colombia'], flag: ['🇵🇹','🇨🇩','🇺🇿','🇨🇴'], color: '#8e44ad' },
+  L: { teams: ['Inglaterra', 'Croacia', 'Ghana', 'Panamá'], flag: ['🏴󠁧󠁢󠁥󠁮󠁧󠁿','🇭🇷','🇬🇭','🇵🇦'], color: '#d35400' },
+};
+
+// Sample matches (first 10 from image)
+const matches = [
+  { id:1, date:'11 Jun', group:'A', t1:'México', f1:'🇲🇽', t2:'Sudáfrica', f2:'🇿🇦' },
+  { id:2, date:'11 Jun', group:'A', t1:'Corea del Sur', f1:'🇰🇷', t2:'República Checa', f2:'🇨🇿' },
+  { id:3, date:'12 Jun', group:'B', t1:'Canadá', f1:'🇨🇦', t2:'República Checa', f2:'🇨🇿' },
+  { id:4, date:'12 Jun', group:'B', t1:'Bosnia y Herzegovina', f1:'🇧🇦', t2:'Sudáfrica', f2:'🇿🇦' },
+  { id:5, date:'12 Jun', group:'A', t1:'Haití', f1:'🇭🇹', t2:'Australia', f2:'🇦🇺' },
+  { id:6, date:'13 Jun', group:'B', t1:'Brasil', f1:'🇧🇷', t2:'Costa Rica', f2:'🇨🇷' },
+  { id:7, date:'13 Jun', group:'C', t1:'EEUU', f1:'🇺🇸', t2:'Turquía', f2:'🇹🇷' },
+  { id:8, date:'13 Jun', group:'D', t1:'Alemania', f1:'🇩🇪', t2:'Países Bajos', f2:'🇳🇱' },
+  { id:9, date:'14 Jun', group:'E', t1:'España', f1:'🇪🇸', t2:'Argentina', f2:'🇦🇷' },
+  { id:10, date:'14 Jun', group:'F', t1:'Francia', f1:'🇫🇷', t2:'Portugal', f2:'🇵🇹' },
+  { id:11, date:'14 Jun', group:'G', t1:'Bélgica', f1:'🇧🇪', t2:'Egipto', f2:'🇪🇬' },
+  { id:12, date:'14 Jun', group:'H', t1:'Colombia', f1:'🇨🇴', t2:'Inglater ra', f2:'🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { id:13, date:'15 Jun', group:'A', t1:'Marruecos', f1:'🇲🇦', t2:'Escocia', f2:'🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+  { id:14, date:'15 Jun', group:'B', t1:'Arabia Saudita', f1:'🇸🇦', t2:'Uruguay', f2:'🇺🇾' },
+  { id:15, date:'15 Jun', group:'C', t1:'Irán', f1:'🇮🇷', t2:'Nueva Zelanda', f2:'🇳🇿' },
+];
+
+// State
+let picks = JSON.parse(localStorage.getItem('polla_picks') || '{}');
+let groupPicks = JSON.parse(localStorage.getItem('polla_groups') || '{}');
+
+// Leaderboard mock
+const leaderboard = [
+  { name: 'Carlos M.', avatar: '👨', pts: 18, correct: 6, detail: 'Grupo A-C' },
+  { name: 'Ana R.', avatar: '👩', pts: 15, correct: 5, detail: 'Grupo B' },
+  { name: 'Tú', avatar: '⭐', pts: 0, correct: 0, detail: 'Sin picks aún', me: true },
+  { name: 'Pedro L.', avatar: '🧔', pts: 12, correct: 4, detail: 'Grupo D' },
+  { name: 'María G.', avatar: '👩‍🦱', pts: 9, correct: 3, detail: 'Grupo E' },
+  { name: 'Juan P.', avatar: '🧑', pts: 9, correct: 3, detail: 'Grupo F' },
+  { name: 'Luisa V.', avatar: '👩‍🦰', pts: 6, correct: 2, detail: 'Grupo G' },
+  { name: 'Roberto K.', avatar: '👨‍🦳', pts: 3, correct: 1, detail: 'Grupo H' },
+];
+
+// ===== RENDER MATCHES =====
+function renderMatches() {
+  const container = document.getElementById('matches-list');
+  container.innerHTML = matches.map(m => {
+    const gColor = (groups[m.group]?.color) || '#003DA5';
+    const pick = picks[m.id] || '';
+    return `
+    <div class="match-card" style="--group-color:${gColor}">
+      <div class="match-meta">
+        <span class="match-date">📅 ${m.date}</span>
+        <span class="group-tag">GRUPO ${m.group}</span>
+      </div>
+      <div class="match-teams">
+        <div class="team">
+          <div class="team-flag">${m.f1}</div>
+          <div class="team-name">${m.t1}</div>
+        </div>
+        <div class="vs-block">
+          <span class="vs-text">VS</span>
+        </div>
+        <div class="team right">
+          <div class="team-flag">${m.f2}</div>
+          <div class="team-name">${m.t2}</div>
+        </div>
+      </div>
+      <div class="result-selector">
+        <button class="result-btn ${pick==='1'?'selected-1':''}" onclick="setPick(${m.id},'1',this)">${m.t1.split(' ')[0]}</button>
+        <button class="result-btn ${pick==='x'?'selected-x':''}" onclick="setPick(${m.id},'x',this)">EMPATE</button>
+        <button class="result-btn ${pick==='2'?'selected-2':''}" onclick="setPick(${m.id},'2',this)">${m.t2.split(' ')[0]}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== RENDER GROUPS =====
+function renderGroups() {
+  const container = document.getElementById('groups-grid');
+  container.innerHTML = Object.entries(groups).map(([key, g]) => {
+    const p = groupPicks[key] || {};
+    return `
+    <div class="group-card">
+      <div class="group-header" style="background:${g.color}22; border-bottom:2px solid ${g.color}; color:${g.color}">
+        GRUPO ${key}
+        <small>${g.teams.length} equipos</small>
+      </div>
+      <div class="group-teams-list">
+        ${g.teams.map((t,i)=>`<div class="group-team-row"><span class="flag">${g.flag[i]}</span>${t}</div>`).join('')}
+      </div>
+      <div class="qualified-inputs">
+        <div class="qualified-label">Clasificados</div>
+        <div class="pos-row">
+          <span class="pos-label">1°</span>
+          <select class="qualified-select" onchange="setGroupPick('${key}','first',this.value)">
+            <option value="">— Seleccionar —</option>
+            ${g.teams.map(t=>`<option value="${t}" ${p.first===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="pos-row">
+          <span class="pos-label" style="color:rgba(255,255,255,0.5)">2°</span>
+          <select class="qualified-select" onchange="setGroupPick('${key}','second',this.value)">
+            <option value="">— Seleccionar —</option>
+            ${g.teams.map(t=>`<option value="${t}" ${p.second===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== RENDER LEADERBOARD =====
+function renderLeaderboard() {
+  const myPts = Object.keys(picks).length;
+  const sorted = [...leaderboard];
+  const meIdx = sorted.findIndex(r => r.me);
+  if (meIdx >= 0) { sorted[meIdx].pts = myPts; sorted[meIdx].detail = `${myPts} aciertos`; }
+  sorted.sort((a,b) => b.pts - a.pts);
+
+  const myRank = sorted.findIndex(r => r.me) + 1;
+  document.getElementById('my-rank').textContent = '#' + myRank;
+
+  const posClass = (i) => i===0?'gold-pos':i===1?'silver-pos':i===2?'bronze-pos':'';
+  const medal = (i) => i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+
+  document.getElementById('leaderboard').innerHTML = sorted.map((r,i) => `
+    <div class="lb-row ${r.me?'me':''}">
+      <div class="lb-pos ${posClass(i)}">${medal(i)}</div>
+      <div class="lb-avatar">${r.avatar}</div>
+      <div class="lb-info">
+        <div class="lb-name">${r.name}${r.me?' (Tú)':''}</div>
+        <div class="lb-detail">${r.detail}</div>
+      </div>
+      <div>
+        <div class="lb-score">${r.pts}</div>
+        <div class="lb-pts">PUNTOS</div>
+      </div>
+    </div>`).join('');
+}
+
+// ===== RENDER MY PICKS =====
+function renderMyPicks() {
+  const total = Object.keys(picks).length;
+  const pct = Math.round(total / matches.length * 100);
+  document.getElementById('pick-total').textContent = total;
+  document.getElementById('pick-pct').textContent = pct + '%';
+  document.getElementById('progress-text').textContent = `${total} / ${matches.length}`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('total-pts').textContent = total;
+
+  const byGroup = {};
+  matches.forEach(m => {
+    if (!byGroup[m.group]) byGroup[m.group] = { total:0, picked:0 };
+    byGroup[m.group].total++;
+    if (picks[m.id]) byGroup[m.group].picked++;
+  });
+
+  const gColor = (g) => groups[g]?.color || '#333';
+  document.getElementById('picks-summary').innerHTML = Object.entries(byGroup).map(([g,v]) => `
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;border-left:3px solid ${gColor(g)}">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:${gColor(g)};min-width:60px">GRUPO ${g}</div>
+      <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:6px;overflow:hidden">
+        <div style="height:100%;background:${gColor(g)};width:${Math.round(v.picked/v.total*100)}%;transition:width 0.5s"></div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.5);min-width:40px;text-align:right">${v.picked}/${v.total}</div>
+    </div>`).join('');
+}
+
+// ===== ACTIONS =====
+function setPick(id, val, btn) {
+  picks[id] = val;
+  const card = btn.closest('.match-card');
+  card.querySelectorAll('.result-btn').forEach(b => b.className='result-btn');
+  btn.className = `result-btn selected-${val}`;
+  document.getElementById('total-pts').textContent = Object.keys(picks).length;
+  updateProgress();
+}
+
+function setGroupPick(group, pos, val) {
+  if (!groupPicks[group]) groupPicks[group] = {};
+  groupPicks[group][pos] = val;
+}
+
+function updateProgress() {
+  const total = Object.keys(picks).length;
+  const pct = Math.round(total / matches.length * 100);
+  document.getElementById('pick-total').textContent = total;
+  document.getElementById('pick-pct').textContent = pct + '%';
+  document.getElementById('progress-text').textContent = `${total} / ${matches.length}`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function savepicks() {
+  localStorage.setItem('polla_picks', JSON.stringify(picks));
+  localStorage.setItem('polla_groups', JSON.stringify(groupPicks));
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '✅ Guardado!';
+  btn.classList.add('saved');
+  showToast('¡Picks guardados exitosamente!');
+  setTimeout(() => {
+    btn.innerHTML = '💾 Guardar Picks';
+    btn.classList.remove('saved');
+  }, 2000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===== NAV =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'tabla') renderLeaderboard();
+  if (id === 'mis-picks') renderMyPicks();
+}
+
+// ===== INIT =====
+renderMatches();
+renderGroups();
+renderMyPicks();
+</script>
+</body>
+</html>
