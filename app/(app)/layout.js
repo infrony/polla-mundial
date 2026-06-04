@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import AppNav from '@/components/AppNav';
 import LogoutButton from '@/components/LogoutButton';
+import Countdown from '@/components/Countdown';
 import { query } from '@/lib/db';
 
 export default async function AppLayout({ children }) {
@@ -43,7 +44,8 @@ export default async function AppLayout({ children }) {
         </div>
       </header>
       <AppNav isAdmin={session.user.isAdmin} />
-      <main>{children}</main>
+      <main style={{ paddingBottom: '64px' }}>{children}</main>
+      <Countdown variant="floating" />
     </>
   );
 }

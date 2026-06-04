@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Countdown from '@/components/Countdown';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -81,6 +82,8 @@ export default function LoginPage() {
         <div className="auth-footer">
           ¿No tienes cuenta? <Link href="/register">Regístrate aquí</Link>
         </div>
+
+        <Countdown variant="login" />
       </div>
     </div>
   );

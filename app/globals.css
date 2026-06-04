@@ -413,6 +413,15 @@ main {
 }
 .match-card { animation: fadeUp 0.3s ease backwards; }
 
+@keyframes cdFlipOut {
+  0%   { transform: rotateX(0deg);   opacity: 1; }
+  100% { transform: rotateX(-90deg); opacity: 0; }
+}
+@keyframes cdFlipIn {
+  0%   { transform: rotateX(90deg); opacity: 0; }
+  100% { transform: rotateX(0deg);  opacity: 1; }
+}
+
 /* === FILTER BAR === */
 .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .filter-bar::-webkit-scrollbar { display: none; }
