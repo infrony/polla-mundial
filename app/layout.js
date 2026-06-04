@@ -4,6 +4,10 @@ import Providers from '@/components/Providers';
 export const metadata = {
   title: 'Polla Mundial 2026',
   description: 'Pronostica los partidos del Mundial 2026 USA · México · Canadá',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {
