@@ -432,6 +432,18 @@ main {
 .filter-btn.active { background: rgba(255,255,255,0.08); border-color: var(--gold); color: var(--gold); }
 .filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
 
+/* === MOBILE AUTH COMPACT === */
+@media (max-height: 780px), (max-width: 520px) {
+  .auth-card { padding: 20px 20px 16px; }
+  .auth-logo { margin-bottom: 12px; }
+  .auth-logo img { width: 48px !important; height: 48px !important; margin-bottom: 4px !important; }
+  .auth-logo .header-title { font-size: 1.5rem; }
+  .auth-logo .header-subtitle { font-size: 0.65rem; margin-top: 2px; }
+  .auth-form-title { font-size: 1.1rem; margin-bottom: 12px; }
+  .form-group { margin-bottom: 10px; }
+  .auth-footer { margin-top: 10px; }
+}
+
 /* === GROUP PICK ROW SUMMARY === */
 .group-pick-row {
   background: var(--card-bg);

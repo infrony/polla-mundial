@@ -117,12 +117,14 @@ function Colon({ size = 'lg' }) {
 
 /* ── Componente principal ────────────────────────────────────────── */
 export default function Countdown({ variant = 'login' }) {
-  const [time,    setTime]    = useState(null);
-  const [hidden,  setHidden]  = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [time,     setTime]     = useState(null);
+  const [hidden,   setHidden]   = useState(false);
+  const [mounted,  setMounted]  = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    setIsMobile(window.innerWidth < 520);
     if (Date.now() > HIDE_AFTER) { setHidden(true); return; }
     setTime(getTimeLeft());
     const id = setInterval(() => {
@@ -170,36 +172,37 @@ export default function Countdown({ variant = 'login' }) {
     );
   }
 
-  /* ── Versión login (grande) ── */
+  /* ── Versión login (grande en desktop, compacta en mobile) ── */
+  const unitSize = isMobile ? 'sm' : 'lg';
   return (
-    <div style={{ marginTop: 28, textAlign: 'center' }}>
+    <div style={{ marginTop: isMobile ? 14 : 28, textAlign: 'center' }}>
       <div style={{
         fontFamily: "'Bebas Neue', sans-serif",
-        fontSize: '0.95rem', letterSpacing: '4px',
+        fontSize: isMobile ? '0.7rem' : '0.95rem', letterSpacing: '4px',
         color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
-        marginBottom: 18,
+        marginBottom: isMobile ? 10 : 18,
       }}>
         ⚽ Cuenta regresiva al Mundial
       </div>
 
       {started ? (
         <div style={{
-          fontFamily: "'Bebas Neue'", fontSize: '1.7rem', letterSpacing: '3px',
-          color: '#F5A623', padding: '16px 20px',
+          fontFamily: "'Bebas Neue'", fontSize: isMobile ? '1.1rem' : '1.7rem', letterSpacing: '3px',
+          color: '#F5A623', padding: '12px 16px',
           border: '1px solid rgba(245,166,35,0.3)', borderRadius: 12,
           background: 'rgba(245,166,35,0.06)',
         }}>
           ⚽ ¡EL MUNDIAL HA COMENZADO!
         </div>
       ) : (
-        <div style={{ display:'flex', justifyContent:'center', alignItems:'flex-start', gap: 10 }}>
-          <FlipUnit value={time.days}    label="Días"  color="#F5A623" />
-          <Colon />
-          <FlipUnit value={time.hours}   label="Horas" color="#C8102E" />
-          <Colon />
-          <FlipUnit value={time.minutes} label="Min"   color="#FAFAFA" />
-          <Colon />
-          <FlipUnit value={time.seconds} label="Seg"   color="#5b9cf6" />
+        <div style={{ display:'flex', justifyContent:'center', alignItems:'flex-start', gap: isMobile ? 6 : 10 }}>
+          <FlipUnit value={time.days}    label="Días"  color="#F5A623" size={unitSize} />
+          <Colon size={unitSize} />
+          <FlipUnit value={time.hours}   label="Horas" color="#C8102E" size={unitSize} />
+          <Colon size={unitSize} />
+          <FlipUnit value={time.minutes} label="Min"   color="#FAFAFA" size={unitSize} />
+          <Colon size={unitSize} />
+          <FlipUnit value={time.seconds} label="Seg"   color="#5b9cf6" size={unitSize} />
         </div>
       )}
     </div>
