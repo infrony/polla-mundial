@@ -77,6 +77,11 @@ export default function RegisterPage() {
         <div className="auth-footer">
           ¿Ya tienes cuenta? <Link href="/login">Inicia sesión</Link>
         </div>
+        <div className="auth-footer" style={{ marginTop: 6 }}>
+          <Link href="/reglas" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>
+            📋 Reglas y Condiciones
+          </Link>
+        </div>
       </div>
     </div>
   );

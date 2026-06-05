@@ -82,6 +82,11 @@ export default function LoginPage() {
         <div className="auth-footer">
           ¿No tienes cuenta? <Link href="/register">Regístrate aquí</Link>
         </div>
+        <div className="auth-footer" style={{ marginTop: 6 }}>
+          <Link href="/reglas" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>
+            📋 Reglas y Condiciones
+          </Link>
+        </div>
 
         <Countdown variant="login" />
       </div>

@@ -54,7 +54,10 @@ export default async function AppLayout({ children }) {
         letterSpacing: '1px',
         color: 'rgba(255,255,255,0.25)',
       }}>
-        Hecho con ❤️ en Panamá 🇵🇦 por{' '}
+        <a href="/reglas" style={{ color: 'rgba(255,255,255,0.35)', textDecoration: 'none', marginRight: 16 }}>
+          📋 Reglas y Condiciones
+        </a>
+        {'·  '}Hecho con ❤️ en Panamá 🇵🇦 por{' '}
         <a href="https://infrony.com" target="_blank" rel="noopener noreferrer"
           style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
           infrony.com

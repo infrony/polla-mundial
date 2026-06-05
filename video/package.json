@@ -1,0 +1,16 @@
+{
+  "name": "polla-mundial-video",
+  "version": "1.0.0",
+  "description": "Remotion promo video — Polla Mundial 2026",
+  "scripts": {
+    "start": "remotion studio",
+    "render": "remotion render src/index.jsx PollaMundial out/promo.mp4 --codec=h264"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.290",
+    "@remotion/google-fonts": "4.0.290",
+    "remotion": "4.0.290",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}
