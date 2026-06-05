@@ -63,7 +63,7 @@ export default function MatchesList({ matches, initialPicks, results }) {
               </div>
               <div className="match-teams">
                 <div className="team">
-                  <div className="team-flag">{m.f1}</div>
+                  <img className="team-flag-img" src={`https://flagcdn.com/w80/${m.iso1}.png`} alt={m.t1} />
                   <div className="team-name">{m.t1}</div>
                 </div>
                 <div className="vs-block">
@@ -71,7 +71,7 @@ export default function MatchesList({ matches, initialPicks, results }) {
                   {result && <span style={{ fontSize: '0.7rem', color: 'var(--gold)', fontFamily: "'Bebas Neue',sans-serif", letterSpacing: '1px' }}>{result === '1' ? m.t1.split(' ')[0] : result === '2' ? m.t2.split(' ')[0] : 'EMPATE'}</span>}
                 </div>
                 <div className="team right">
-                  <div className="team-flag">{m.f2}</div>
+                  <img className="team-flag-img" src={`https://flagcdn.com/w80/${m.iso2}.png`} alt={m.t2} />
                   <div className="team-name">{m.t2}</div>
                 </div>
               </div>

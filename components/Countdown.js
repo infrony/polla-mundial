@@ -117,19 +117,22 @@ function Colon({ size = 'lg' }) {
 
 /* ── Componente principal ────────────────────────────────────────── */
 export default function Countdown({ variant = 'login' }) {
-  const [time,   setTime]   = useState(() => getTimeLeft());
-  const [hidden, setHidden] = useState(() => Date.now() > HIDE_AFTER);
+  const [time,    setTime]    = useState(null);
+  const [hidden,  setHidden]  = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (hidden) return;
+    setMounted(true);
+    if (Date.now() > HIDE_AFTER) { setHidden(true); return; }
+    setTime(getTimeLeft());
     const id = setInterval(() => {
       if (Date.now() > HIDE_AFTER) { setHidden(true); clearInterval(id); return; }
       setTime(getTimeLeft());
     }, 1000);
     return () => clearInterval(id);
-  }, [hidden]);
+  }, []);
 
-  if (hidden) return null;
+  if (!mounted || hidden) return null;
 
   const started = !time;
 

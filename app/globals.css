@@ -149,6 +149,7 @@ main {
 .match-teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
 .team { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .team-flag { font-size: 1.8rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+.team-flag-img { width: 56px; height: 38px; object-fit: cover; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
 .team-name { font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; text-align: center; color: rgba(255,255,255,0.9); max-width: 100px; }
 .vs-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .vs-text { font-family: 'Bebas Neue', sans-serif; font-size: 0.75rem; color: rgba(255,255,255,0.2); letter-spacing: 2px; }
@@ -423,8 +424,10 @@ main {
 }
 
 /* === FILTER BAR === */
-.filter-bar { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-.filter-bar::-webkit-scrollbar { display: none; }
+.filter-bar { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; padding-bottom: 6px; }
+.filter-bar::-webkit-scrollbar { height: 3px; }
+.filter-bar::-webkit-scrollbar-track { background: transparent; }
+.filter-bar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 .filter-btn { padding: 5px 14px; border: 1px solid var(--border); border-radius: 20px; background: none; color: rgba(255,255,255,0.4); font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .filter-btn.active { background: rgba(255,255,255,0.08); border-color: var(--gold); color: var(--gold); }
 .filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }

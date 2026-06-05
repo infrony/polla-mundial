@@ -46,6 +46,20 @@ export default async function AppLayout({ children }) {
       <AppNav isAdmin={session.user.isAdmin} />
       <main style={{ paddingBottom: '64px' }}>{children}</main>
       <Countdown variant="floating" />
+      <footer style={{
+        textAlign: 'center',
+        padding: '14px 16px 72px',
+        fontFamily: "'Barlow Condensed', sans-serif",
+        fontSize: '0.75rem',
+        letterSpacing: '1px',
+        color: 'rgba(255,255,255,0.25)',
+      }}>
+        Hecho con ❤️ en Panamá 🇵🇦 por{' '}
+        <a href="https://infrony.com" target="_blank" rel="noopener noreferrer"
+          style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
+          infrony.com
+        </a>
+      </footer>
     </>
   );
 }
