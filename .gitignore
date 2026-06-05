@@ -21,6 +21,9 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+.agents/
+.claude/
+skills-lock.json
 
 # Misc
 *.pem
