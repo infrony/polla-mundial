@@ -3,10 +3,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
-  { href: '/partidos', label: '⚽ Partidos' },
-  { href: '/grupos',   label: '🏆 Grupos' },
-  { href: '/tabla',    label: '📊 Tabla' },
-  { href: '/mis-picks',label: '⭐ Mis Picks' },
+  { href: '/partidos',      label: '⚽ Partidos' },
+  { href: '/grupos',        label: '🏆 Grupos' },
+  { href: '/eliminatorias', label: '🥇 Eliminatorias' },
+  { href: '/tabla',         label: '📊 Tabla' },
+  { href: '/mis-picks',     label: '⭐ Mis Picks' },
 ];
 
 export default function AppNav({ isAdmin }) {

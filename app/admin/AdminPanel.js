@@ -3,7 +3,16 @@ import { useState, useRef } from 'react';
 import { matches, groups } from '@/lib/data';
 import Link from 'next/link';
 
-export default function AdminPanel({ users, picks: initialPicks, groupPicks: initialGPicks, results: initialResults, groupResults: initialGResults }) {
+const KNOCKOUT_ROUNDS = [
+  { key: 'r32',   label: 'Dieciseisavos de Final', pts: 1  },
+  { key: 'r16',   label: 'Octavos de Final',        pts: 2  },
+  { key: 'qf',    label: 'Cuartos de Final',         pts: 4  },
+  { key: 'sf',    label: 'Semifinal',                pts: 6  },
+  { key: '3rd',   label: 'Tercer Lugar',             pts: 8  },
+  { key: 'final', label: 'Gran Final',               pts: 8  },
+];
+
+export default function AdminPanel({ users, picks: initialPicks, groupPicks: initialGPicks, results: initialResults, groupResults: initialGResults, knockoutMatches: initialKO, knockoutResults: initialKOR }) {
   const [results, setResults] = useState(() => {
     const r = {};
     initialResults.forEach(x => { r[x.match_id] = x.result; });
@@ -17,6 +26,21 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   const [usersPaid, setUsersPaid] = useState(() => {
     const m = {};
     users.forEach(u => { m[u.id] = u.paid; });
+    return m;
+  });
+  const [usersKOPaid, setUsersKOPaid] = useState(() => {
+    const m = {};
+    users.forEach(u => { m[u.id] = u.paid_knockout; });
+    return m;
+  });
+  const [koMatches, setKoMatches] = useState(() => {
+    const m = {};
+    (initialKO || []).forEach(x => { m[x.id] = { ...x }; });
+    return m;
+  });
+  const [koResults, setKoResults] = useState(() => {
+    const m = {};
+    (initialKOR || []).forEach(x => { m[x.match_id] = x.winner; });
     return m;
   });
   const [toast, setToast] = useState('');
@@ -65,6 +89,50 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
     else showToast('❌ Error al guardar');
   }
 
+  async function toggleKOPaid(userId) {
+    const newVal = !usersKOPaid[userId];
+    setUsersKOPaid(p => ({ ...p, [userId]: newVal }));
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'knockout_payment', userId, paid: newVal }),
+    });
+    if (res.ok) showToast(newVal ? '✅ Inscripción eliminatoria confirmada ($10)' : '⚠️ Inscripción eliminatoria revocada');
+    else { setUsersKOPaid(p => ({ ...p, [userId]: !newVal })); showToast('❌ Error'); }
+  }
+
+  async function saveKOTeams(matchId, team1, team2) {
+    setKoMatches(m => ({ ...m, [matchId]: { ...m[matchId], team1, team2 } }));
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'knockout_match_setup', matchId, team1, team2 }),
+    });
+    if (res.ok) showToast('✅ Equipos guardados');
+    else showToast('❌ Error al guardar');
+  }
+
+  async function saveKOResult(matchId, winner) {
+    setKoResults(r => ({ ...r, [matchId]: winner || undefined }));
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'knockout_result', matchId, winner }),
+    });
+    if (res.ok) showToast(winner ? '✅ Resultado guardado' : '🗑 Resultado eliminado');
+    else showToast('❌ Error al guardar');
+  }
+
+  async function toggleKOLock(matchId, locked) {
+    setKoMatches(m => ({ ...m, [matchId]: { ...m[matchId], locked } }));
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'knockout_lock', matchId, locked }),
+    });
+    if (!res.ok) { setKoMatches(m => ({ ...m, [matchId]: { ...m[matchId], locked: !locked } })); showToast('❌ Error'); }
+  }
+
   async function saveGroupResult(groupKey, pos, team) {
     const cur = gResults[groupKey] || {};
     const updated = { ...cur, [pos]: team };
@@ -111,9 +179,9 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
 
       <div className="admin-wrapper">
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {['users','matches','groups'].map(t => (
+          {['users','matches','groups','knockout'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)} className="filter-btn" style={activeTab === t ? { borderColor: 'var(--gold)', color: 'var(--gold)', background: 'rgba(255,255,255,0.06)' } : {}}>
-              {t === 'users' ? '👥 Participantes' : t === 'matches' ? '⚽ Resultados Partidos' : '🏆 Resultados Grupos'}
+              {t === 'users' ? '👥 Participantes' : t === 'matches' ? '⚽ Resultados Partidos' : t === 'groups' ? '🏆 Resultados Grupos' : '🥇 Eliminatorias'}
             </button>
           ))}
         </div>
@@ -291,6 +359,93 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
           </>
         )}
 
+        {/* KNOCKOUT TAB */}
+        {activeTab === 'knockout' && (
+          <>
+            {/* Payment section */}
+            <div className="section-header" style={{ marginBottom: 12 }}>
+              <h2>Inscripciones Eliminatorias ($10)</h2>
+              <span className="badge gold">
+                💰 {Object.values(usersKOPaid).filter(Boolean).length} / {users.length} pagaron
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
+              {users.map(u => (
+                <button
+                  key={u.id}
+                  onClick={() => toggleKOPaid(u.id)}
+                  style={{
+                    padding: '6px 14px', borderRadius: 20, cursor: 'pointer', fontSize: '0.78rem',
+                    fontFamily: "'Barlow Condensed'", letterSpacing: '1px', transition: 'all 0.2s',
+                    background: usersKOPaid[u.id] ? 'rgba(46,204,113,0.12)' : 'rgba(200,16,46,0.08)',
+                    border: `1px solid ${usersKOPaid[u.id] ? '#2ecc71' : 'rgba(200,16,46,0.4)'}`,
+                    color: usersKOPaid[u.id] ? '#2ecc71' : '#ff6b7a',
+                  }}
+                >
+                  {usersKOPaid[u.id] ? '✓' : '✗'} {u.name.split(' ')[0]}
+                </button>
+              ))}
+            </div>
+
+            {/* Match setup + results per round */}
+            {KNOCKOUT_ROUNDS.map(({ key, label, pts }) => {
+              const roundMatches = Object.values(koMatches).filter(m => m.round === key).sort((a,b) => a.match_number - b.match_number);
+              return (
+                <div key={key} style={{ marginBottom: 24 }}>
+                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: '1rem', letterSpacing: '2px', color: '#F5A623', marginBottom: 10, borderBottom: '1px solid rgba(245,166,35,0.2)', paddingBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {label}
+                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', fontFamily: "'Barlow Condensed'", letterSpacing: '1px' }}>+{pts} pts por acierto</span>
+                  </div>
+                  {roundMatches.map(m => {
+                    const winner = koResults[m.id];
+                    const locked = m.locked;
+                    return (
+                      <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', minWidth: 80 }}>#{m.match_number} {m.match_date && <span style={{ color: 'rgba(255,255,255,0.4)' }}>{m.match_date}</span>}</span>
+                        <KOTeamInput
+                          placeholder="Equipo 1"
+                          value={m.team1 || ''}
+                          onBlur={val => saveKOTeams(m.id, val, m.team2 || '')}
+                        />
+                        <span style={{ color: 'rgba(255,255,255,0.25)', fontFamily: "'Bebas Neue'", fontSize: '0.8rem' }}>vs</span>
+                        <KOTeamInput
+                          placeholder="Equipo 2"
+                          value={m.team2 || ''}
+                          onBlur={val => saveKOTeams(m.id, m.team1 || '', val)}
+                        />
+                        {m.team1 && m.team2 && (
+                          <select
+                            className="result-input"
+                            value={winner || ''}
+                            onChange={e => saveKOResult(m.id, e.target.value)}
+                            style={{ minWidth: 140 }}
+                          >
+                            <option value="">Sin resultado</option>
+                            <option value={m.team1}>{m.team1}</option>
+                            <option value={m.team2}>{m.team2}</option>
+                          </select>
+                        )}
+                        <button
+                          onClick={() => toggleKOLock(m.id, !locked)}
+                          style={{
+                            padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontSize: '0.7rem',
+                            fontFamily: "'Barlow Condensed'", letterSpacing: '1px',
+                            background: locked ? 'rgba(200,16,46,0.12)' : 'rgba(255,255,255,0.04)',
+                            border: `1px solid ${locked ? 'rgba(200,16,46,0.4)' : 'var(--border)'}`,
+                            color: locked ? '#ff6b7a' : 'rgba(255,255,255,0.35)',
+                          }}
+                        >
+                          {locked ? '🔒' : '🔓'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </>
+        )}
+
         {/* GROUPS TAB */}
         {activeTab === 'groups' && (
           <>
@@ -331,5 +486,24 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
 
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
     </>
+  );
+}
+
+function KOTeamInput({ placeholder, value, onBlur }) {
+  const [local, setLocal] = useState(value);
+  return (
+    <input
+      type="text"
+      value={local}
+      placeholder={placeholder}
+      onChange={e => setLocal(e.target.value)}
+      onBlur={() => { if (local !== value) onBlur(local); }}
+      style={{
+        flex: 1, minWidth: 110, maxWidth: 160, padding: '5px 10px', borderRadius: 6,
+        background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',
+        color: '#fff', fontFamily: "'Barlow Condensed'", fontSize: '0.82rem',
+        outline: 'none',
+      }}
+    />
   );
 }

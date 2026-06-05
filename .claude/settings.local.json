@@ -11,7 +11,11 @@
       "Read(//tmp/**)",
       "PowerShell(Stop-Process *)",
       "PowerShell(New-Item *)",
-      "PowerShell(Copy-Item *)"
+      "PowerShell(Copy-Item *)",
+      "Bash(npx next *)",
+      "Bash(findstr \":3000 \")",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(Stop-Process *)"
     ]
   }
 }
