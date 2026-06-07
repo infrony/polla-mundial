@@ -2,6 +2,28 @@
 import { useState, useCallback, useRef } from 'react';
 import { groups } from '@/lib/data';
 
+const LIVE_STATUSES = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P']);
+
+function parseResult(r) {
+  // r can be an object {result, score_t1, score_t2, status} or legacy string
+  if (!r) return null;
+  if (typeof r === 'string') return { result: r, score_t1: null, score_t2: null, status: null };
+  return r;
+}
+
+function StatusBadge({ status, score_t1, score_t2 }) {
+  if (!status) return null;
+  const base = status.split(':')[0];
+  const elapsed = status.split(':')[1];
+  const isLive = LIVE_STATUSES.has(base);
+  if (!isLive) return null;
+
+  const label = base === 'HT' ? 'DESCANSO' : base === 'ET' ? 'PRÓRR.' : base === 'P' ? 'PENALES' : elapsed ? `${elapsed}'` : 'EN VIVO';
+  return (
+    <span className="live-badge">● {label}</span>
+  );
+}
+
 export default function MatchesList({ matches, initialPicks, results }) {
   const [picks, setPicks] = useState(initialPicks || {});
   const [toast, setToast] = useState('');
@@ -52,34 +74,67 @@ export default function MatchesList({ matches, initialPicks, results }) {
         {filtered.map(m => {
           const gColor = groups[m.group]?.color || '#003DA5';
           const pick = picks[m.id] || '';
-          const result = results?.[m.id];
-          const isLocked = !!result;
+          const r = parseResult(results?.[m.id]);
+          const statusBase = r?.status?.split(':')[0];
+          const isLive = r?.status && LIVE_STATUSES.has(statusBase);
+          const hasScore = r?.score_t1 !== null && r?.score_t1 !== undefined && r?.score_t2 !== null;
+          const isLocked = isLive || !!r?.result;
+
+          const t1Wins = r?.result === '1';
+          const t2Wins = r?.result === '2';
+          const isDraw = r?.result === 'x';
 
           return (
-            <div key={m.id} className="match-card" style={{ '--group-color': gColor }}>
+            <div key={m.id} className={`match-card${isLive ? ' match-live' : ''}`} style={{ '--group-color': gColor }}>
               <div className="match-meta">
                 <span className="match-date">📅 {m.date}</span>
                 <span className="group-tag" style={{ color: gColor }}>GRUPO {m.group}</span>
               </div>
               <div className="match-teams">
-                <div className="team">
+                <div className={`team${t2Wins ? ' team-dim' : t1Wins ? ' team-winner' : ''}`}>
                   <img className="team-flag-img" src={`https://flagcdn.com/w80/${m.iso1}.png`} alt={m.t1} />
-                  <div className="team-name">{m.t1}</div>
+                  <div className="team-name">
+                    {t1Wins && <span className="winner-crown">🏆</span>}
+                    {m.t1}
+                  </div>
                 </div>
+
                 <div className="vs-block">
-                  <span className="vs-text">VS</span>
-                  {result && <span style={{ fontSize: '0.7rem', color: 'var(--gold)', fontFamily: "'Bebas Neue',sans-serif", letterSpacing: '1px' }}>{result === '1' ? m.t1.split(' ')[0] : result === '2' ? m.t2.split(' ')[0] : 'EMPATE'}</span>}
+                  {isLive && hasScore ? (
+                    <>
+                      <span className="score-display score-live">{r.score_t1} – {r.score_t2}</span>
+                      <StatusBadge status={r.status} />
+                    </>
+                  ) : hasScore && r?.result ? (
+                    <>
+                      <span className="score-display score-final">{r.score_t1} – {r.score_t2}</span>
+                      <span className="result-label">
+                        {t1Wins ? m.t1.split(' ')[0] : t2Wins ? m.t2.split(' ')[0] : 'EMPATE'}
+                      </span>
+                    </>
+                  ) : r?.result ? (
+                    <span className="result-label">
+                      {t1Wins ? m.t1.split(' ')[0] : t2Wins ? m.t2.split(' ')[0] : 'EMPATE'}
+                    </span>
+                  ) : (
+                    <span className="vs-text">VS</span>
+                  )}
                 </div>
-                <div className="team right">
+
+                <div className={`team right${t1Wins ? ' team-dim' : t2Wins ? ' team-winner' : ''}`}>
                   <img className="team-flag-img" src={`https://flagcdn.com/w80/${m.iso2}.png`} alt={m.t2} />
-                  <div className="team-name">{m.t2}</div>
+                  <div className="team-name">
+                    {t2Wins && <span className="winner-crown">🏆</span>}
+                    {m.t2}
+                  </div>
                 </div>
               </div>
+
               <div className="result-selector">
                 {['1','x','2'].map(val => {
                   const label = val === '1' ? m.t1.split(' ')[0] : val === 'x' ? 'EMPATE' : m.t2.split(' ')[0];
                   const isSelected = pick === val;
-                  const isCorrect = result && result === val;
+                  const isCorrect = r?.result && r.result === val;
                   let cls = 'result-btn';
                   if (isCorrect) cls += ' correct';
                   else if (isSelected) cls += ` selected-${val}`;

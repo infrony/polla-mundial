@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { matches, groups } from '@/lib/data';
 import Link from 'next/link';
 
@@ -46,7 +46,39 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   const [toast, setToast] = useState('');
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [syncLogs, setSyncLogs] = useState([]);
+  const [syncLoading, setSyncLoading] = useState(false);
   const toastRef = useRef(null);
+
+  const loadSyncLogs = useCallback(async () => {
+    const res = await fetch('/api/sync-results');
+    if (res.ok) {
+      const data = await res.json();
+      setSyncLogs(data.logs || []);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'sync') loadSyncLogs();
+  }, [activeTab, loadSyncLogs]);
+
+  async function runSync(mode) {
+    setSyncLoading(true);
+    const res = await fetch('/api/sync-results', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const nf = data.notFound?.length ? ` (${data.notFound.length} no encontrados)` : '';
+      showToast(`✅ ${data.matchesUpdated} partidos actualizados${nf} · ${data.requestsRemaining ?? '?'} requests restantes`);
+      await loadSyncLogs();
+    } else {
+      showToast(`❌ ${data.error}`);
+    }
+    setSyncLoading(false);
+  }
 
   const picksMap = {};
   initialPicks.forEach(p => {
@@ -179,9 +211,9 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
 
       <div className="admin-wrapper">
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {['users','matches','groups','knockout'].map(t => (
+          {['users','matches','groups','knockout','sync'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)} className="filter-btn" style={activeTab === t ? { borderColor: 'var(--gold)', color: 'var(--gold)', background: 'rgba(255,255,255,0.06)' } : {}}>
-              {t === 'users' ? '👥 Participantes' : t === 'matches' ? '⚽ Resultados Partidos' : t === 'groups' ? '🏆 Resultados Grupos' : '🥇 Eliminatorias'}
+              {t === 'users' ? '👥 Participantes' : t === 'matches' ? '⚽ Resultados Partidos' : t === 'groups' ? '🏆 Resultados Grupos' : t === 'knockout' ? '🥇 Eliminatorias' : '🔄 Sync API'}
             </button>
           ))}
         </div>
@@ -479,6 +511,116 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                   </div>
                 );
               })}
+            </div>
+          </>
+        )}
+        {/* SYNC TAB */}
+        {activeTab === 'sync' && (
+          <>
+            <div className="section-header">
+              <h2>Sincronización API</h2>
+              <span className="badge blue">api-football.com</span>
+            </div>
+            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px' }}>
+              Cada sync consume 1 request de tu límite diario de 100. Usa <strong style={{ color: 'rgba(255,255,255,0.7)' }}>Hoy</strong> para obtener todos los partidos del día (recomendado cada 30-45 min). Usa <strong style={{ color: 'rgba(255,255,255,0.7)' }}>EN VIVO</strong> durante partidos activos para scores en tiempo real.
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => runSync('today')}
+                disabled={syncLoading}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', cursor: syncLoading ? 'not-allowed' : 'pointer',
+                  background: syncLoading ? 'rgba(255,255,255,0.04)' : 'rgba(0,61,165,0.25)',
+                  border: '1px solid rgba(0,61,165,0.6)', color: syncLoading ? 'rgba(255,255,255,0.3)' : '#fff',
+                  fontFamily: "'Barlow Condensed'", fontSize: '0.9rem', letterSpacing: '1px',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {syncLoading ? '⏳ Sincronizando...' : '📅 Sincronizar Partidos de Hoy'}
+              </button>
+              <button
+                onClick={() => runSync('live')}
+                disabled={syncLoading}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', cursor: syncLoading ? 'not-allowed' : 'pointer',
+                  background: syncLoading ? 'rgba(255,255,255,0.04)' : 'rgba(46,204,113,0.12)',
+                  border: '1px solid rgba(46,204,113,0.4)', color: syncLoading ? 'rgba(255,255,255,0.3)' : '#2ecc71',
+                  fontFamily: "'Barlow Condensed'", fontSize: '0.9rem', letterSpacing: '1px',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {syncLoading ? '⏳ Sincronizando...' : '🔴 Sincronizar EN VIVO'}
+              </button>
+              <button
+                onClick={loadSyncLogs}
+                style={{
+                  padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',
+                  color: 'rgba(255,255,255,0.5)', fontFamily: "'Barlow Condensed'",
+                  fontSize: '0.85rem', letterSpacing: '1px',
+                }}
+              >
+                ↺ Actualizar log
+              </button>
+            </div>
+
+            <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px' }}>
+              HISTORIAL DE SINCRONIZACIONES
+            </div>
+
+            {syncLogs.length === 0 ? (
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Sin sincronizaciones aún.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {syncLogs.map(log => (
+                  <div key={log.id} style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '8px 12px', borderRadius: '8px',
+                    background: log.error_message ? 'rgba(200,16,46,0.08)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${log.error_message ? 'rgba(200,16,46,0.3)' : 'var(--border)'}`,
+                    flexWrap: 'wrap', fontSize: '0.78rem', fontFamily: "'Barlow Condensed'",
+                  }}>
+                    <span style={{ color: 'rgba(255,255,255,0.4)', minWidth: '130px' }}>
+                      {new Date(log.synced_at).toLocaleString('es', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <span style={{
+                      padding: '2px 8px', borderRadius: '4px', fontSize: '0.65rem', letterSpacing: '1px',
+                      background: log.mode === 'live' ? 'rgba(46,204,113,0.15)' : 'rgba(0,61,165,0.2)',
+                      border: `1px solid ${log.mode === 'live' ? 'rgba(46,204,113,0.4)' : 'rgba(0,61,165,0.4)'}`,
+                      color: log.mode === 'live' ? '#2ecc71' : '#5b9ef4',
+                    }}>
+                      {log.mode === 'live' ? 'EN VIVO' : 'HOY'}
+                    </span>
+                    {log.error_message ? (
+                      <span style={{ color: '#ff6b7a' }}>❌ {log.error_message}</span>
+                    ) : (
+                      <>
+                        <span style={{ color: 'rgba(255,255,255,0.8)' }}>⚽ {log.matches_updated} partidos</span>
+                        {log.requests_used !== null && (
+                          <span style={{ color: log.requests_used > 80 ? '#F5A623' : 'rgba(255,255,255,0.4)' }}>
+                            {log.requests_used}/{log.requests_limit} requests
+                          </span>
+                        )}
+                        {log.not_found && (
+                          <span style={{ color: '#F5A623', fontSize: '0.7rem' }} title={log.not_found}>
+                            ⚠ no encontrados: {log.not_found}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: '24px', padding: '12px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontFamily: "'Barlow Condensed'", lineHeight: 1.6 }}>
+              <strong style={{ color: 'rgba(255,255,255,0.6)', letterSpacing: '1px' }}>ESTRATEGIA RECOMENDADA (100 req/día)</strong><br />
+              • Días sin partidos: no sincronizar<br />
+              • Días con partidos (antes del inicio): sync "Hoy" 1 vez para cargar fixtures<br />
+              • Durante partidos: sync "EN VIVO" cada 30-45 min (4-6 req por día de juego)<br />
+              • Después de terminar todos: sync "Hoy" 1 vez final para scores definitivos<br />
+              • Total estimado torneo: ~60-80 requests en ~39 días de acción
             </div>
           </>
         )}

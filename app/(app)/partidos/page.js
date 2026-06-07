@@ -11,14 +11,23 @@ export default async function PartidosPage() {
 
   const [picksRes, resultsRes] = await Promise.all([
     query('SELECT match_id, pick FROM picks WHERE user_id = $1', [session.user.id]),
-    query('SELECT match_id, result FROM match_results'),
+    query('SELECT match_id, result, score_t1, score_t2, match_status FROM match_results').catch(
+      () => query('SELECT match_id, result FROM match_results')
+    ),
   ]);
 
   const initialPicks = {};
   picksRes.rows.forEach(r => { initialPicks[r.match_id] = r.pick; });
 
   const results = {};
-  resultsRes.rows.forEach(r => { results[r.match_id] = r.result; });
+  resultsRes.rows.forEach(r => {
+    results[r.match_id] = {
+      result: r.result,
+      score_t1: r.score_t1 ?? null,
+      score_t2: r.score_t2 ?? null,
+      status: r.match_status ?? null,
+    };
+  });
 
   return (
     <>

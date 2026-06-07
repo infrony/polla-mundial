@@ -180,6 +180,39 @@ main {
 .result-btn.correct { background: var(--success) !important; border-color: var(--success) !important; color: var(--dark) !important; }
 .result-btn.saving { opacity: 0.6; pointer-events: none; }
 
+/* === SCORE / LIVE DISPLAY === */
+.score-display {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.score-final { color: var(--gold); }
+.score-live  { color: #2ecc71; }
+.result-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+.live-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: #2ecc71;
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.match-live { border-color: rgba(46,204,113,0.35) !important; }
+.match-live::before { background: linear-gradient(90deg, transparent, rgba(46,204,113,0.12), transparent) !important; }
+
+.team-winner .team-flag-img { box-shadow: 0 0 8px rgba(245,166,35,0.5); border-color: rgba(245,166,35,0.5); }
+.team-winner .team-name    { color: #fff; font-weight: 700; }
+.team-dim .team-flag-img   { opacity: 0.4; }
+.team-dim .team-name       { color: rgba(255,255,255,0.35); }
+.winner-crown { font-size: 0.65rem; margin-right: 3px; vertical-align: middle; }
+
 /* === GROUPS === */
 .groups-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .group-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.2s; }

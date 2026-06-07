@@ -15,7 +15,8 @@
       "Bash(npx next *)",
       "Bash(findstr \":3000 \")",
       "Bash(findstr \"LISTENING\")",
-      "Bash(Stop-Process *)"
+      "Bash(Stop-Process *)",
+      "WebFetch(domain:www.api-football.com)"
     ]
   }
 }
