@@ -82,6 +82,7 @@ export default function RegisterPage() {
             📋 Reglas y Condiciones
           </Link>
         </div>
+
       </div>
     </div>
   );
