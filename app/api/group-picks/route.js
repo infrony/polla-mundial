@@ -23,8 +23,8 @@ export async function POST(req) {
   if (!groupKey || !['first','second'].includes(pos)) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
 
   if (new Date() >= new Date(TOURNAMENT_START)) {
-    const uRes = await query('SELECT picks_unlocked, group_picks_unlocked FROM users WHERE id = $1', [session.user.id]);
-    if (!uRes.rows[0]?.picks_unlocked && !uRes.rows[0]?.group_picks_unlocked) {
+    const uRes = await query('SELECT group_picks_unlocked FROM users WHERE id = $1', [session.user.id]);
+    if (!uRes.rows[0]?.group_picks_unlocked) {
       return NextResponse.json({ error: 'Las predicciones están cerradas.' }, { status: 403 });
     }
   }
