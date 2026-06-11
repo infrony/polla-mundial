@@ -519,10 +519,10 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
           <>
             <div className="section-header">
               <h2>Sincronización API</h2>
-              <span className="badge blue">api-football.com</span>
+              <span className="badge blue">worldcup26.ir</span>
             </div>
             <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px' }}>
-              Cada sync consume 1 request de tu límite diario de 100. Usa <strong style={{ color: 'rgba(255,255,255,0.7)' }}>Hoy</strong> para obtener todos los partidos del día (recomendado cada 30-45 min). Usa <strong style={{ color: 'rgba(255,255,255,0.7)' }}>EN VIVO</strong> durante partidos activos para scores en tiempo real.
+              API gratuita sin límite de requests. Usa <strong style={{ color: 'rgba(255,255,255,0.7)' }}>Todos</strong> para actualizar todos los partidos con resultado. Usa <strong style={{ color: 'rgba(255,255,255,0.7)' }}>EN VIVO</strong> durante partidos activos para sincronizar solo los que están en juego.
             </p>
 
             <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
@@ -537,7 +537,7 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                   transition: 'all 0.2s',
                 }}
               >
-                {syncLoading ? '⏳ Sincronizando...' : '📅 Sincronizar Partidos de Hoy'}
+                {syncLoading ? '⏳ Sincronizando...' : '📅 Sincronizar Todos'}
               </button>
               <button
                 onClick={() => runSync('live')}
@@ -590,18 +590,13 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                       border: `1px solid ${log.mode === 'live' ? 'rgba(46,204,113,0.4)' : 'rgba(0,61,165,0.4)'}`,
                       color: log.mode === 'live' ? '#2ecc71' : '#5b9ef4',
                     }}>
-                      {log.mode === 'live' ? 'EN VIVO' : 'HOY'}
+                      {log.mode === 'live' ? 'EN VIVO' : 'TODOS'}
                     </span>
                     {log.error_message ? (
                       <span style={{ color: '#ff6b7a' }}>❌ {log.error_message}</span>
                     ) : (
                       <>
                         <span style={{ color: 'rgba(255,255,255,0.8)' }}>⚽ {log.matches_updated} partidos</span>
-                        {log.requests_used !== null && (
-                          <span style={{ color: log.requests_used > 80 ? '#F5A623' : 'rgba(255,255,255,0.4)' }}>
-                            {log.requests_used}/{log.requests_limit} requests
-                          </span>
-                        )}
                         {log.not_found && (
                           <span style={{ color: '#F5A623', fontSize: '0.7rem' }} title={log.not_found}>
                             ⚠ no encontrados: {log.not_found}
@@ -615,12 +610,12 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
             )}
 
             <div style={{ marginTop: '24px', padding: '12px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontFamily: "'Barlow Condensed'", lineHeight: 1.6 }}>
-              <strong style={{ color: 'rgba(255,255,255,0.6)', letterSpacing: '1px' }}>ESTRATEGIA RECOMENDADA (100 req/día)</strong><br />
+              <strong style={{ color: 'rgba(255,255,255,0.6)', letterSpacing: '1px' }}>ESTRATEGIA RECOMENDADA</strong><br />
               • Días sin partidos: no sincronizar<br />
-              • Días con partidos (antes del inicio): sync "Hoy" 1 vez para cargar fixtures<br />
-              • Durante partidos: sync "EN VIVO" cada 30-45 min (4-6 req por día de juego)<br />
-              • Después de terminar todos: sync "Hoy" 1 vez final para scores definitivos<br />
-              • Total estimado torneo: ~60-80 requests en ~39 días de acción
+              • Días con partidos (antes del inicio): sync "Todos" 1 vez para cargar fixtures<br />
+              • Durante partidos: sync "EN VIVO" cada 15-30 min para scores en tiempo real<br />
+              • Después de terminar todos: sync "Todos" 1 vez final para scores definitivos<br />
+              • Sin límite de requests — API gratuita (worldcup26.ir)
             </div>
           </>
         )}

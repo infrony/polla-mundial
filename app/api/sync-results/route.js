@@ -64,8 +64,7 @@ export async function POST(req) {
 
   let fixtures, requestsUsed, requestsLimit;
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const result = await fetchFixtures(mode === 'live' ? { live: true } : { date: today });
+    const result = await fetchFixtures(mode === 'live' ? { live: true } : {});
     fixtures = result.fixtures;
     requestsUsed = result.requestsUsed;
     requestsLimit = result.requestsLimit;
@@ -144,7 +143,5 @@ export async function POST(req) {
     ok: true,
     matchesUpdated,
     notFound,
-    requestsUsed,
-    requestsRemaining: requestsLimit - (requestsUsed ?? 0),
   });
 }
