@@ -24,7 +24,14 @@ function StatusBadge({ status, score_t1, score_t2 }) {
   );
 }
 
-export default function MatchesList({ matches, initialPicks, results, picksUnlocked }) {
+function to12h(time24) {
+  const [h, m] = time24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+export default function MatchesList({ matches, initialPicks, results, picksUnlocked, matchTimes = {} }) {
   const [picks, setPicks] = useState(initialPicks || {});
   const [toast, setToast] = useState('');
   const [activeGroup, setActiveGroup] = useState('ALL');
@@ -88,7 +95,14 @@ export default function MatchesList({ matches, initialPicks, results, picksUnloc
           return (
             <div key={m.id} className={`match-card${isLive ? ' match-live' : ''}`} style={{ '--group-color': gColor }}>
               <div className="match-meta">
-                <span className="match-date">📅 {m.date}</span>
+                <span className="match-date">
+                  📅 {m.date}
+                  {matchTimes[m.id] && (
+                    <span style={{ marginLeft: '5px', fontSize: '0.65rem', opacity: 0.55, fontFamily: "'Barlow Condensed'", letterSpacing: '0.5px' }}>
+                      {to12h(matchTimes[m.id])}
+                    </span>
+                  )}
+                </span>
                 <span className="group-tag" style={{ color: gColor }}>GRUPO {m.group}</span>
               </div>
               <div className="match-teams">
