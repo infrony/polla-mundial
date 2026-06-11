@@ -22,7 +22,10 @@ export async function POST(req) {
   if (!matchId || !['1','x','2'].includes(pick)) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
 
   if (new Date() >= new Date(TOURNAMENT_START)) {
-    return NextResponse.json({ error: 'Las predicciones están cerradas.' }, { status: 403 });
+    const uRes = await query('SELECT picks_unlocked FROM users WHERE id = $1', [session.user.id]);
+    if (!uRes.rows[0]?.picks_unlocked) {
+      return NextResponse.json({ error: 'Las predicciones están cerradas.' }, { status: 403 });
+    }
   }
 
   await query(
@@ -44,7 +47,10 @@ export async function PUT(req) {
   if (!picks || typeof picks !== 'object') return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
 
   if (new Date() >= new Date(TOURNAMENT_START)) {
-    return NextResponse.json({ error: 'Las predicciones están cerradas.', saved: 0 }, { status: 403 });
+    const uRes = await query('SELECT picks_unlocked FROM users WHERE id = $1', [session.user.id]);
+    if (!uRes.rows[0]?.picks_unlocked) {
+      return NextResponse.json({ error: 'Las predicciones están cerradas.', saved: 0 }, { status: 403 });
+    }
   }
 
   const valid = ['1','x','2'];

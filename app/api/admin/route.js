@@ -15,7 +15,7 @@ export async function GET() {
   if (!await checkAdmin(session)) return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
 
   const [users, picks, groupPicks, results, groupResults] = await Promise.all([
-    query(`SELECT id, name, email, image, provider, is_admin, paid, created_at,
+    query(`SELECT id, name, email, image, provider, is_admin, paid, picks_unlocked, created_at,
             (SELECT COUNT(*) FROM picks WHERE user_id = users.id) AS pick_count
            FROM users ORDER BY created_at DESC`),
     query(`SELECT p.user_id, p.match_id, p.pick
@@ -107,6 +107,13 @@ export async function POST(req) {
         [matchId, winner, session.user.id]
       );
     }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.type === 'picks_unlock') {
+    const { userId, unlocked } = body;
+    if (!userId) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
+    await query('UPDATE users SET picks_unlocked = $1 WHERE id = $2', [!!unlocked, userId]);
     return NextResponse.json({ ok: true });
   }
 

@@ -33,6 +33,11 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
     users.forEach(u => { m[u.id] = u.paid_knockout; });
     return m;
   });
+  const [usersUnlocked, setUsersUnlocked] = useState(() => {
+    const m = {};
+    users.forEach(u => { m[u.id] = u.picks_unlocked; });
+    return m;
+  });
   const [koMatches, setKoMatches] = useState(() => {
     const m = {};
     (initialKO || []).forEach(x => { m[x.id] = { ...x }; });
@@ -119,6 +124,18 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
     });
     if (res.ok) showToast('✅ Resultado guardado');
     else showToast('❌ Error al guardar');
+  }
+
+  async function togglePicksUnlock(userId) {
+    const newVal = !usersUnlocked[userId];
+    setUsersUnlocked(p => ({ ...p, [userId]: newVal }));
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'picks_unlock', userId, unlocked: newVal }),
+    });
+    if (res.ok) showToast(newVal ? '🔓 Picks desbloqueados para este usuario' : '🔒 Picks bloqueados');
+    else { setUsersUnlocked(p => ({ ...p, [userId]: !newVal })); showToast('❌ Error'); }
   }
 
   async function toggleKOPaid(userId) {
@@ -282,6 +299,26 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                     >
                       {usersPaid[u.id] ? '✗ Revocar inscripción' : '✓ Confirmar pago $5'}
                     </button>
+                    <button
+                      onClick={e => { e.stopPropagation(); togglePicksUnlock(u.id); }}
+                      style={{
+                        marginTop: '6px',
+                        width: '100%',
+                        padding: '7px',
+                        border: `1px solid ${usersUnlocked[u.id] ? 'rgba(245,166,35,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                        borderRadius: '6px',
+                        background: usersUnlocked[u.id] ? 'rgba(245,166,35,0.12)' : 'rgba(255,255,255,0.03)',
+                        color: usersUnlocked[u.id] ? '#F5A623' : 'rgba(255,255,255,0.35)',
+                        fontFamily: "'Barlow Condensed'",
+                        fontSize: '0.78rem',
+                        letterSpacing: '1px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {usersUnlocked[u.id] ? '🔓 Picks desbloqueados' : '🔒 Desbloquear picks fase grupos'}
+                    </button>
+
                     {selectedUser?.id === u.id && (
                       <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
                         <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px' }}>PICKS DEL USUARIO</div>

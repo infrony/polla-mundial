@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { TOURNAMENT_START } from '@/lib/data';
 
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -22,7 +23,10 @@ export async function POST(req) {
   if (!groupKey || !['first','second'].includes(pos)) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
 
   if (new Date() >= new Date(TOURNAMENT_START)) {
-    return NextResponse.json({ error: 'Las predicciones están cerradas.' }, { status: 403 });
+    const uRes = await query('SELECT picks_unlocked FROM users WHERE id = $1', [session.user.id]);
+    if (!uRes.rows[0]?.picks_unlocked) {
+      return NextResponse.json({ error: 'Las predicciones están cerradas.' }, { status: 403 });
+    }
   }
 
   const col = pos === 'first' ? 'first_team' : 'second_team';

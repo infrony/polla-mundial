@@ -24,7 +24,7 @@ function StatusBadge({ status, score_t1, score_t2 }) {
   );
 }
 
-export default function MatchesList({ matches, initialPicks, results }) {
+export default function MatchesList({ matches, initialPicks, results, picksUnlocked }) {
   const [picks, setPicks] = useState(initialPicks || {});
   const [toast, setToast] = useState('');
   const [activeGroup, setActiveGroup] = useState('ALL');
@@ -78,7 +78,7 @@ export default function MatchesList({ matches, initialPicks, results }) {
           const statusBase = r?.status?.split(':')[0];
           const isLive = r?.status && LIVE_STATUSES.has(statusBase);
           const hasScore = r?.score_t1 !== null && r?.score_t1 !== undefined && r?.score_t2 !== null;
-          const isDateLocked = Date.now() >= new Date(TOURNAMENT_START).getTime();
+          const isDateLocked = !picksUnlocked && Date.now() >= new Date(TOURNAMENT_START).getTime();
           const isLocked = isLive || !!r?.result || isDateLocked;
 
           const t1Wins = r?.result === '1';

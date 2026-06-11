@@ -20,6 +20,7 @@ async function init() {
   try {
     await client.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS paid_knockout BOOLEAN DEFAULT FALSE;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS picks_unlocked BOOLEAN DEFAULT FALSE;
     `);
 
     await client.query(`

@@ -12,7 +12,7 @@ export default async function AdminPage() {
   if (!session.user.isAdmin) redirect('/partidos');
 
   const [usersRes, picksRes, gPicksRes, resultsRes, gResultsRes, koMatchesRes, koResultsRes] = await Promise.all([
-    query(`SELECT id, name, email, image, provider, is_admin, paid, paid_knockout, created_at,
+    query(`SELECT id, name, email, image, provider, is_admin, paid, paid_knockout, picks_unlocked, created_at,
             (SELECT COUNT(*) FROM picks WHERE user_id = users.id) AS pick_count
            FROM users ORDER BY created_at`),
     query('SELECT user_id, match_id, pick FROM picks ORDER BY user_id, match_id'),
