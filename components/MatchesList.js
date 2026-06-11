@@ -1,6 +1,6 @@
 'use client';
 import { useState, useCallback, useRef } from 'react';
-import { groups } from '@/lib/data';
+import { groups, TOURNAMENT_START } from '@/lib/data';
 
 const LIVE_STATUSES = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P']);
 
@@ -78,7 +78,8 @@ export default function MatchesList({ matches, initialPicks, results }) {
           const statusBase = r?.status?.split(':')[0];
           const isLive = r?.status && LIVE_STATUSES.has(statusBase);
           const hasScore = r?.score_t1 !== null && r?.score_t1 !== undefined && r?.score_t2 !== null;
-          const isLocked = isLive || !!r?.result;
+          const isDateLocked = Date.now() >= new Date(TOURNAMENT_START).getTime();
+          const isLocked = isLive || !!r?.result || isDateLocked;
 
           const t1Wins = r?.result === '1';
           const t2Wins = r?.result === '2';

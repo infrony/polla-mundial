@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
-import { groups } from '@/lib/data';
+import { TOURNAMENT_START } from '@/lib/data';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -21,10 +21,8 @@ export async function POST(req) {
   const { groupKey, pos, team } = await req.json();
   if (!groupKey || !['first','second'].includes(pos)) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
 
-  // Block if group already started
-  const lockDate = groups[groupKey]?.lockDate;
-  if (lockDate && new Date() >= new Date(lockDate)) {
-    return NextResponse.json({ error: 'Este grupo ya no acepta cambios.' }, { status: 403 });
+  if (new Date() >= new Date(TOURNAMENT_START)) {
+    return NextResponse.json({ error: 'Las predicciones están cerradas.' }, { status: 403 });
   }
 
   const col = pos === 'first' ? 'first_team' : 'second_team';
