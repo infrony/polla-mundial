@@ -294,7 +294,7 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                     <div className="user-stats">
                       <div className="user-stat"><div className="user-stat-val">{u.pick_count}</div><div className="user-stat-lbl">Picks</div></div>
                       <div className="user-stat"><div className="user-stat-val">{calcPts(u.id)}</div><div className="user-stat-lbl">Puntos</div></div>
-                      <div className="user-stat"><div className="user-stat-val" style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>{u.provider === 'google' ? 'G' : '📧'}</div><div className="user-stat-lbl">Acceso</div></div>
+                      <div className="user-stat"><div className="user-stat-val" style={{ color: Object.keys(gPicksMap[u.id] || {}).length > 0 ? '#3498db' : 'rgba(255,255,255,0.25)' }}>{Object.keys(gPicksMap[u.id] || {}).length}/12</div><div className="user-stat-lbl">Grupos</div></div>
                     </div>
                     {/* Botón toggle de pago */}
                     <button
@@ -358,7 +358,35 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
 
                     {selectedUser?.id === u.id && (
                       <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
-                        <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px' }}>PICKS DEL USUARIO</div>
+                        <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px' }}>PRONÓSTICO DE GRUPOS</div>
+                        {Object.entries(groups).map(([gKey, g]) => {
+                          const gp = gPicksMap[u.id]?.[gKey];
+                          if (!gp?.first && !gp?.second) return null;
+                          const r = gResults[gKey] || {};
+                          const firstOk = r.first && gp.first === r.first;
+                          const secondOk = r.second && gp.second === r.second;
+                          return (
+                            <div key={gKey} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontSize: '0.75rem' }}>
+                              <span style={{ color: g.color, fontFamily: "'Bebas Neue'", fontSize: '0.75rem', minWidth: '18px' }}>{gKey}</span>
+                              <div style={{ display: 'flex', gap: '5px', flex: 1 }}>
+                                {gp.first && (
+                                  <span style={{ padding: '2px 7px', borderRadius: '4px', background: firstOk ? 'rgba(46,204,113,0.15)' : 'rgba(255,255,255,0.06)', border: `1px solid ${firstOk ? '#2ecc71' : 'rgba(255,255,255,0.12)'}`, color: firstOk ? '#2ecc71' : 'rgba(255,255,255,0.7)', fontSize: '0.7rem', fontFamily: "'Barlow Condensed'" }}>
+                                    1° {gp.first}
+                                  </span>
+                                )}
+                                {gp.second && (
+                                  <span style={{ padding: '2px 7px', borderRadius: '4px', background: secondOk ? 'rgba(46,204,113,0.15)' : 'rgba(255,255,255,0.06)', border: `1px solid ${secondOk ? '#2ecc71' : 'rgba(255,255,255,0.12)'}`, color: secondOk ? '#2ecc71' : 'rgba(255,255,255,0.55)', fontSize: '0.7rem', fontFamily: "'Barlow Condensed'" }}>
+                                    2° {gp.second}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {!Object.keys(gPicksMap[u.id] || {}).length && (
+                          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.25)', fontFamily: "'Barlow Condensed'" }}>Sin pronósticos de grupos</div>
+                        )}
+                        <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)', margin: '10px 0 8px' }}>PICKS DE PARTIDOS</div>
                         {matches.slice(0, 15).map(m => {
                           const pick = userPicks[m.id];
                           if (!pick) return null;
@@ -420,6 +448,59 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                       })}
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Group picks matrix */}
+            <div className="section-header" style={{ marginTop: '28px' }}>
+              <h2>Pronósticos de Grupos</h2>
+              <span className="badge blue">Todos los usuarios</span>
+            </div>
+            <div className="table-scroll">
+              <table className="picks-table">
+                <thead>
+                  <tr>
+                    <th>Grupo</th>
+                    <th>Resultado</th>
+                    {users.map(u => <th key={u.id} title={u.email}>{u.name.split(' ')[0]}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(groups).map(([gKey, g]) => {
+                    const r = gResults[gKey] || {};
+                    return (
+                      <tr key={gKey}>
+                        <td style={{ color: g.color, fontFamily: "'Bebas Neue'", fontSize: '0.85rem', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
+                          GRUPO {gKey}
+                        </td>
+                        <td style={{ fontSize: '0.7rem', fontFamily: "'Barlow Condensed'", lineHeight: 1.5, whiteSpace: 'nowrap' }}>
+                          {r.first ? <div style={{ color: 'rgba(255,255,255,0.7)' }}>1° {r.first}</div> : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}
+                          {r.second && <div style={{ color: 'rgba(255,255,255,0.45)' }}>2° {r.second}</div>}
+                        </td>
+                        {users.map(u => {
+                          const gp = gPicksMap[u.id]?.[gKey];
+                          if (!gp?.first && !gp?.second) return <td key={u.id} style={{ color: 'rgba(255,255,255,0.15)' }}>—</td>;
+                          const firstOk = r.first && gp.first === r.first;
+                          const secondOk = r.second && gp.second === r.second;
+                          return (
+                            <td key={u.id} style={{ fontSize: '0.7rem', fontFamily: "'Barlow Condensed'", lineHeight: 1.5, whiteSpace: 'nowrap' }}>
+                              {gp.first && (
+                                <div style={{ color: firstOk ? '#2ecc71' : 'rgba(255,255,255,0.7)' }}>
+                                  {firstOk ? '✓' : ''} {gp.first}
+                                </div>
+                              )}
+                              {gp.second && (
+                                <div style={{ color: secondOk ? '#2ecc71' : 'rgba(255,255,255,0.4)' }}>
+                                  {secondOk ? '✓' : ''} {gp.second}
+                                </div>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
