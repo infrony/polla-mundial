@@ -38,6 +38,11 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
     users.forEach(u => { m[u.id] = u.picks_unlocked; });
     return m;
   });
+  const [usersGroupUnlocked, setUsersGroupUnlocked] = useState(() => {
+    const m = {};
+    users.forEach(u => { m[u.id] = u.group_picks_unlocked; });
+    return m;
+  });
   const [koMatches, setKoMatches] = useState(() => {
     const m = {};
     (initialKO || []).forEach(x => { m[x.id] = { ...x }; });
@@ -136,6 +141,18 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
     });
     if (res.ok) showToast(newVal ? '🔓 Picks desbloqueados para este usuario' : '🔒 Picks bloqueados');
     else { setUsersUnlocked(p => ({ ...p, [userId]: !newVal })); showToast('❌ Error'); }
+  }
+
+  async function toggleGroupPicksUnlock(userId) {
+    const newVal = !usersGroupUnlocked[userId];
+    setUsersGroupUnlocked(p => ({ ...p, [userId]: newVal }));
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'group_picks_unlock', userId, unlocked: newVal }),
+    });
+    if (res.ok) showToast(newVal ? '🔓 Pronóstico de grupos desbloqueado' : '🔒 Pronóstico de grupos bloqueado');
+    else { setUsersGroupUnlocked(p => ({ ...p, [userId]: !newVal })); showToast('❌ Error'); }
   }
 
   async function toggleKOPaid(userId) {
@@ -317,6 +334,26 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                       }}
                     >
                       {usersUnlocked[u.id] ? '🔓 Picks desbloqueados' : '🔒 Desbloquear picks fase grupos'}
+                    </button>
+
+                    <button
+                      onClick={e => { e.stopPropagation(); toggleGroupPicksUnlock(u.id); }}
+                      style={{
+                        marginTop: '6px',
+                        width: '100%',
+                        padding: '7px',
+                        border: `1px solid ${usersGroupUnlocked[u.id] ? 'rgba(52,152,219,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                        borderRadius: '6px',
+                        background: usersGroupUnlocked[u.id] ? 'rgba(52,152,219,0.12)' : 'rgba(255,255,255,0.03)',
+                        color: usersGroupUnlocked[u.id] ? '#3498db' : 'rgba(255,255,255,0.35)',
+                        fontFamily: "'Barlow Condensed'",
+                        fontSize: '0.78rem',
+                        letterSpacing: '1px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {usersGroupUnlocked[u.id] ? '🔓 Pronóstico grupos desbloqueado' : '🔒 Desbloquear pronóstico grupos'}
                     </button>
 
                     {selectedUser?.id === u.id && (

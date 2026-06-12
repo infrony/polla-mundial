@@ -71,7 +71,7 @@ function StandingsTable({ groupKey, rows, groupResults = {} }) {
   );
 }
 
-export default function GroupsGrid({ initialPicks, results, standings = {} }) {
+export default function GroupsGrid({ initialPicks, results, standings = {}, groupPicksUnlocked = false }) {
   const [picks, setPicks] = useState(initialPicks || {});
   const [saving, setSaving] = useState({}); // { groupKey: 'saving' | 'saved' | 'error' }
   const timers = useRef({});
@@ -110,7 +110,7 @@ export default function GroupsGrid({ initialPicks, results, standings = {} }) {
       {Object.entries(groups).map(([key, g]) => {
         const p = picks[key] || {};
         const r = results?.[key] || {};
-        const locked = isLocked();
+        const locked = isLocked() && !groupPicksUnlocked;
         const status = saving[key];
 
         return (
