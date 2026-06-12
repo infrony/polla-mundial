@@ -2,15 +2,17 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
 import GroupsGrid from '@/components/GroupsGrid';
+import { fetchAllGroupStandings } from '@/lib/football-api';
 
 export const dynamic = 'force-dynamic';
 
 export default async function GruposPage() {
   const session = await getServerSession(authOptions);
 
-  const [gPicksRes, gResultsRes] = await Promise.all([
+  const [gPicksRes, gResultsRes, standings] = await Promise.all([
     query('SELECT group_key, first_team, second_team FROM group_picks WHERE user_id = $1', [session.user.id]),
     query('SELECT group_key, first_team, second_team FROM group_results'),
+    fetchAllGroupStandings().catch(() => ({})),
   ]);
 
   const initialPicks = {};
@@ -28,7 +30,7 @@ export default async function GruposPage() {
       <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '14px', lineHeight: 1.4 }}>
         Selecciona quién clasifica 1° y 2° en cada grupo para ganar puntos extra.
       </p>
-      <GroupsGrid initialPicks={initialPicks} results={results} />
+      <GroupsGrid initialPicks={initialPicks} results={results} standings={standings} />
     </>
   );
 }
