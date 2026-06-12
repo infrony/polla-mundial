@@ -6,7 +6,7 @@ function isLocked() {
   return new Date() >= new Date(TOURNAMENT_START);
 }
 
-function StandingsTable({ groupKey, rows }) {
+function StandingsTable({ groupKey, rows, groupResults = {} }) {
   if (!rows || rows.length === 0) return null;
   const g = groups[groupKey];
   const hasData = rows.some(r => r.w > 0 || r.d > 0 || r.l > 0);
@@ -44,6 +44,12 @@ function StandingsTable({ groupKey, rows }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                     {flag && <span style={{ fontSize: '0.8rem' }}>{flag}</span>}
                     <span style={{ color: top2 ? '#fff' : 'rgba(255,255,255,0.6)' }}>{nameEs}</span>
+                    {groupResults.first === nameEs && (
+                      <span style={{ marginLeft: '3px', fontSize: '0.6rem', color: 'var(--gold)', fontFamily: "'Bebas Neue'" }}>1°</span>
+                    )}
+                    {groupResults.second === nameEs && (
+                      <span style={{ marginLeft: '3px', fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', fontFamily: "'Bebas Neue'" }}>2°</span>
+                    )}
                   </div>
                 </td>
                 <td style={{ textAlign: 'center', padding: '4px 3px', color: 'rgba(255,255,255,0.45)' }}>{row.mp}</td>
@@ -133,22 +139,7 @@ export default function GroupsGrid({ initialPicks, results, standings = {} }) {
               </div>
             </div>
 
-            <div className="group-teams-list">
-              {g.teams.map((t, i) => (
-                <div key={t} className="group-team-row">
-                  <span style={{ fontSize: '1rem' }}>{g.flag[i]}</span>
-                  {t}
-                  {r.first === t && (
-                    <span style={{ marginLeft: 'auto', color: 'var(--gold)', fontSize: '0.7rem', fontFamily: "'Bebas Neue'" }}>1°</span>
-                  )}
-                  {r.second === t && (
-                    <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontFamily: "'Bebas Neue'" }}>2°</span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <StandingsTable groupKey={key} rows={standings[key] || []} />
+            <StandingsTable groupKey={key} rows={standings[key] || []} groupResults={r} />
 
             <div className="qualified-inputs">
               <div className="qualified-label">Clasificados</div>
