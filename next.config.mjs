@@ -4,6 +4,15 @@ const nextConfig = {
   images: {
     domains: ['lh3.googleusercontent.com'],
   },
+  experimental: {
+    // No reutilizar el Router Cache en memoria al navegar con <Link>:
+    // las páginas dinámicas (admin, etc.) siempre vuelven a leer datos frescos
+    // del servidor en vez de mostrar el payload RSC cacheado de antes.
+    staleTimes: {
+      dynamic: 0,
+      static: 0,
+    },
+  },
   async headers() {
     return [
       {
