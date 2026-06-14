@@ -97,6 +97,9 @@ nav::-webkit-scrollbar { display: none; }
   border-radius: 2px;
 }
 
+/* Sliding pill — hidden on desktop */
+.nav-slider { display: none; }
+
 /* === BOTTOM NAV (mobile) === */
 @media (max-width: 600px) {
   :root { --bottom-nav-h: 62px; }
@@ -141,11 +144,24 @@ nav::-webkit-scrollbar { display: none; }
   }
   .nav-btn .nav-label-full { display: none; }
   .nav-btn .nav-label-short { display: inline; }
-  .nav-btn.active {
-    color: var(--gold);
-    background: rgba(245, 166, 35, 0.13);
-  }
+  /* Active tab — color only; background comes from the pill */
+  .nav-btn.active { color: var(--gold); background: transparent; }
   .nav-btn.active::after { display: none; }
+
+  /* Sliding pill */
+  .nav-slider {
+    display: block;
+    position: absolute;
+    top: 6px;
+    bottom: calc(6px + env(safe-area-inset-bottom));
+    border-radius: 14px;
+    background: rgba(245, 166, 35, 0.15);
+    border: 1px solid rgba(245, 166, 35, 0.35);
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* keep link text above the pill */
+  .nav-btn { z-index: 1; }
 }
 
 /* Floating countdown sits above the bottom nav on mobile */
