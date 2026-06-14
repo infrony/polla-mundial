@@ -19,7 +19,9 @@
       "WebFetch(domain:www.api-football.com)",
       "WebFetch(domain:worldcup26.ir)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "PowerShell(npm install *)",
+      "PowerShell(npm run *)"
     ]
   }
 }

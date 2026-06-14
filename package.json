@@ -9,12 +9,13 @@
     "init-db": "node scripts/init-db.js"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "next": "14.2.15",
-    "react": "^18",
-    "react-dom": "^18",
     "next-auth": "^4.24.11",
     "pg": "^8.13.1",
-    "bcryptjs": "^2.4.3"
+    "react": "^18",
+    "react-dom": "^18",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6"

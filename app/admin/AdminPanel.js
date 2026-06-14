@@ -58,7 +58,40 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   const [selectedUser, setSelectedUser] = useState(null);
   const [syncLogs, setSyncLogs] = useState([]);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [emailPreview, setEmailPreview] = useState(null);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailResult, setEmailResult] = useState('');
   const toastRef = useRef(null);
+
+  const loadEmailPreview = useCallback(async () => {
+    const res = await fetch('/api/admin/send-email');
+    if (res.ok) setEmailPreview(await res.json());
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'email') loadEmailPreview();
+  }, [activeTab, loadEmailPreview]);
+
+  async function sendEmail(test) {
+    if (!test && !confirm(`¿Enviar el correo de resumen a ${emailPreview?.recipientCount ?? 'los'} participantes que ya pagaron? Esta acción no se puede deshacer.`)) return;
+    setEmailLoading(true);
+    setEmailResult('');
+    const res = await fetch('/api/admin/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ test }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) {
+      setEmailResult(test ? `✅ Correo de prueba enviado a ${data.to}` : `✅ Enviado a ${data.sent} participantes`);
+      showToast(test ? '✅ Prueba enviada' : `✅ Enviado a ${data.sent}`);
+    } else {
+      const msg = data.error || (data.failures && data.failures.join('; ')) || 'Error al enviar';
+      setEmailResult(`❌ ${msg}`);
+      showToast('❌ Error al enviar');
+    }
+    setEmailLoading(false);
+  }
 
   const loadSyncLogs = useCallback(async () => {
     const res = await fetch('/api/sync-results');
@@ -245,9 +278,9 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
 
       <div className="admin-wrapper">
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {['users','matches','groups','knockout','sync'].map(t => (
+          {['users','matches','groups','knockout','sync','email'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)} className="filter-btn" style={activeTab === t ? { borderColor: 'var(--gold)', color: 'var(--gold)', background: 'rgba(255,255,255,0.06)' } : {}}>
-              {t === 'users' ? '👥 Participantes' : t === 'matches' ? '⚽ Resultados Partidos' : t === 'groups' ? '🏆 Resultados Grupos' : t === 'knockout' ? '🥇 Eliminatorias' : '🔄 Sync API'}
+              {t === 'users' ? '👥 Participantes' : t === 'matches' ? '⚽ Resultados Partidos' : t === 'groups' ? '🏆 Resultados Grupos' : t === 'knockout' ? '🥇 Eliminatorias' : t === 'sync' ? '🔄 Sync API' : '📧 Correos'}
             </button>
           ))}
         </div>
@@ -772,6 +805,78 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
               • Después de terminar todos: sync "Todos" 1 vez final para scores definitivos<br />
               • Sin límite de requests — API gratuita (worldcup26.ir)
             </div>
+          </>
+        )}
+
+        {/* EMAIL TAB */}
+        {activeTab === 'email' && (
+          <>
+            <div className="section-header">
+              <h2>Correos Masivos</h2>
+              <span className="badge blue">{emailPreview?.recipientCount ?? '…'} pagados</span>
+            </div>
+            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px' }}>
+              Envía un resumen personalizado de los pronósticos y los partidos de la próxima semana.
+              Solo se envía a los participantes que ya pagaron su inscripción. Cada correo se personaliza con los puntos, posición y picks de cada usuario.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px', fontSize: '0.8rem', fontFamily: "'Barlow Condensed'", color: 'rgba(255,255,255,0.55)' }}>
+              <div>De: <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{emailPreview?.from || 'mundial@infrony.app'}</strong></div>
+              <div>Asunto: <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{emailPreview?.subject || '…'}</strong></div>
+              <div>Prueba se envía a: <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{emailPreview?.testRecipient || 'infrony@gmail.com'}</strong></div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => sendEmail(true)}
+                disabled={emailLoading || !emailPreview}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', cursor: emailLoading ? 'not-allowed' : 'pointer',
+                  background: 'rgba(245,166,35,0.12)', border: '1px solid rgba(245,166,35,0.5)',
+                  color: emailLoading ? 'rgba(255,255,255,0.3)' : '#F5A623',
+                  fontFamily: "'Barlow Condensed'", fontSize: '0.9rem', letterSpacing: '1px', transition: 'all 0.2s',
+                }}
+              >
+                {emailLoading ? '⏳ Enviando...' : '✉️ Enviar prueba a mi correo'}
+              </button>
+              <button
+                onClick={() => sendEmail(false)}
+                disabled={emailLoading || !emailPreview}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', cursor: emailLoading ? 'not-allowed' : 'pointer',
+                  background: 'rgba(46,204,113,0.12)', border: '1px solid rgba(46,204,113,0.4)',
+                  color: emailLoading ? 'rgba(255,255,255,0.3)' : '#2ecc71',
+                  fontFamily: "'Barlow Condensed'", fontSize: '0.9rem', letterSpacing: '1px', transition: 'all 0.2s',
+                }}
+              >
+                {emailLoading ? '⏳ Enviando...' : `📤 Enviar a los que pagaron (${emailPreview?.recipientCount ?? 0})`}
+              </button>
+            </div>
+
+            {emailResult && (
+              <div style={{
+                padding: '10px 14px', borderRadius: '8px', marginBottom: '20px',
+                background: emailResult.startsWith('✅') ? 'rgba(46,204,113,0.08)' : 'rgba(200,16,46,0.08)',
+                border: `1px solid ${emailResult.startsWith('✅') ? 'rgba(46,204,113,0.3)' : 'rgba(200,16,46,0.3)'}`,
+                color: emailResult.startsWith('✅') ? '#2ecc71' : '#ff6b7a',
+                fontFamily: "'Barlow Condensed'", fontSize: '0.85rem',
+              }}>
+                {emailResult}
+              </div>
+            )}
+
+            <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px' }}>
+              VISTA PREVIA (tu propio correo personalizado)
+            </div>
+            {emailPreview?.html ? (
+              <iframe
+                title="Vista previa del correo"
+                srcDoc={emailPreview.html}
+                style={{ width: '100%', height: '720px', border: '1px solid var(--border)', borderRadius: '10px', background: '#0a0e1a' }}
+              />
+            ) : (
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Cargando vista previa…</p>
+            )}
           </>
         )}
       </div>
