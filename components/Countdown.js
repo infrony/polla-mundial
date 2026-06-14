@@ -141,8 +141,7 @@ export default function Countdown({ variant = 'login' }) {
   /* ── Versión flotante (app pages) ── */
   if (variant === 'floating') {
     return (
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40,
+      <div className="floating-countdown" style={{
         background: 'linear-gradient(90deg,rgba(0,61,165,0.97) 0%,rgba(8,8,20,0.97) 50%,rgba(200,16,46,0.97) 100%)',
         borderTop: '1px solid rgba(255,255,255,0.08)',
         backdropFilter: 'blur(10px)',

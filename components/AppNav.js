@@ -3,27 +3,25 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
-  { href: '/partidos',      label: '⚽ Partidos' },
-  { href: '/grupos',        label: '🏆 Grupos' },
-  { href: '/eliminatorias', label: '🥇 Eliminatorias' },
-  { href: '/tabla',         label: '📊 Tabla' },
-  { href: '/mis-picks',     label: '⭐ Mis Picks' },
+  { href: '/partidos',      icon: '⚽', label: 'Partidos',      short: 'Partidos' },
+  { href: '/grupos',        icon: '🏆', label: 'Grupos',        short: 'Grupos' },
+  { href: '/eliminatorias', icon: '🥇', label: 'Eliminatorias', short: 'Elim.' },
+  { href: '/tabla',         icon: '📊', label: 'Tabla',         short: 'Tabla' },
+  { href: '/mis-picks',     icon: '⭐', label: 'Mis Picks',     short: 'Picks' },
 ];
 
 export default function AppNav({ isAdmin }) {
   const pathname = usePathname();
+  const all = isAdmin ? [...tabs, { href: '/admin', icon: '🛡️', label: 'Admin', short: 'Admin' }] : tabs;
   return (
     <nav>
-      {tabs.map(t => (
+      {all.map(t => (
         <Link key={t.href} href={t.href} className={`nav-btn${pathname === t.href ? ' active' : ''}`}>
-          {t.label}
+          <span className="nav-icon">{t.icon}</span>
+          <span className="nav-label nav-label-full">{t.label}</span>
+          <span className="nav-label nav-label-short">{t.short}</span>
         </Link>
       ))}
-      {isAdmin && (
-        <Link href="/admin" className={`nav-btn${pathname === '/admin' ? ' active' : ''}`}>
-          🛡️ Admin
-        </Link>
-      )}
     </nav>
   );
 }
