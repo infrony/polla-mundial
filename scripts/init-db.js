@@ -100,6 +100,14 @@ async function init() {
         entered_by INT REFERENCES users(id),
         entered_at TIMESTAMP DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS email_log (
+        kind       TEXT NOT NULL,
+        key        TEXT NOT NULL,
+        recipients INT  DEFAULT 0,
+        sent_at    TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (kind, key)
+      );
     `);
 
     // Pre-insert empty bracket slots

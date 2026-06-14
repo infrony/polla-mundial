@@ -58,9 +58,11 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   const [selectedUser, setSelectedUser] = useState(null);
   const [syncLogs, setSyncLogs] = useState([]);
   const [syncLoading, setSyncLoading] = useState(false);
-  const [emailPreview, setEmailPreview] = useState(null);
+  const [emailPreview, setEmailPreview] = useState(null);   // weekly preview + rounds list
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailResult, setEmailResult] = useState('');
+  const [previewKey, setPreviewKey] = useState(null);       // null = weekly, else knockout round key
+  const [koPreview, setKoPreview] = useState(null);         // currently previewed knockout round data
   const toastRef = useRef(null);
 
   const loadEmailPreview = useCallback(async () => {
@@ -72,14 +74,21 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
     if (activeTab === 'email') loadEmailPreview();
   }, [activeTab, loadEmailPreview]);
 
-  async function sendEmail(test) {
-    if (!test && !confirm(`¿Enviar el correo de resumen a ${emailPreview?.recipientCount ?? 'los'} participantes que ya pagaron? Esta acción no se puede deshacer.`)) return;
+  async function previewRound(roundKey) {
+    if (!roundKey) { setPreviewKey(null); return; }
+    const res = await fetch(`/api/admin/send-email?round=${roundKey}`);
+    if (res.ok) { setKoPreview({ ...(await res.json()), round: roundKey }); setPreviewKey(roundKey); }
+  }
+
+  async function sendEmail(test, roundKey = null) {
+    const label = roundKey ? `la fase de eliminatorias` : `los participantes que ya pagaron`;
+    if (!test && !confirm(`¿Enviar este correo a ${label}? Esta acción no se puede deshacer.`)) return;
     setEmailLoading(true);
     setEmailResult('');
     const res = await fetch('/api/admin/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ test }),
+      body: JSON.stringify({ test, round: roundKey || undefined }),
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.ok) {
@@ -815,9 +824,12 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
               <h2>Correos Masivos</h2>
               <span className="badge blue">{emailPreview?.recipientCount ?? '…'} pagados</span>
             </div>
-            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '16px' }}>
-              Envía un resumen personalizado de los pronósticos y los partidos de la próxima semana.
+            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>
+              Resumen semanal personalizado de los pronósticos y los partidos de la próxima semana.
               Solo se envía a los participantes que ya pagaron su inscripción. Cada correo se personaliza con los puntos, posición y picks de cada usuario.
+            </p>
+            <p style={{ fontSize: '0.74rem', color: 'rgba(245,166,35,0.85)', marginBottom: '16px', fontFamily: "'Barlow Condensed'", letterSpacing: '0.5px' }}>
+              🤖 Envío automático: cada domingo 22:00 UTC durante la fase de grupos (se detiene el 1 de julio 2026). Aquí puedes enviarlo manualmente cuando quieras.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px', fontSize: '0.8rem', fontFamily: "'Barlow Condensed'", color: 'rgba(255,255,255,0.55)' }}>
@@ -865,13 +877,74 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
               </div>
             )}
 
-            <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px' }}>
-              VISTA PREVIA (tu propio correo personalizado)
+            {/* KNOCKOUT ROUNDS */}
+            <div className="section-header" style={{ marginTop: '8px' }}>
+              <h2>Eliminatorias</h2>
+              <span className="badge gold">Resumen al cierre de cada fase</span>
             </div>
-            {emailPreview?.html ? (
+            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>
+              Resumen de cada fase para los inscritos en eliminatorias (los que pagaron $10). Cada fase solo se puede enviar una vez que ha comenzado.
+            </p>
+            <p style={{ fontSize: '0.74rem', color: 'rgba(245,166,35,0.85)', marginBottom: '16px', fontFamily: "'Barlow Condensed'", letterSpacing: '0.5px' }}>
+              🤖 Envío automático: un resumen por fase se envía solo al cierre de cada fase (revisión diaria 09:00 UTC). El envío manual aquí también marca la fase como enviada para no duplicar.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+              {(emailPreview?.rounds || []).map(r => (
+                <div key={r.key} style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+                  padding: '10px 12px', borderRadius: '8px',
+                  background: previewKey === r.key ? 'rgba(245,166,35,0.06)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${previewKey === r.key ? 'rgba(245,166,35,0.4)' : 'var(--border)'}`,
+                }}>
+                  <span style={{ fontFamily: "'Bebas Neue'", fontSize: '0.95rem', letterSpacing: '1px', color: '#F5A623', minWidth: '190px' }}>{r.label}</span>
+                  <span style={{
+                    fontFamily: "'Barlow Condensed'", fontSize: '0.72rem', letterSpacing: '1px', padding: '2px 8px', borderRadius: '4px',
+                    background: r.started ? 'rgba(46,204,113,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${r.started ? 'rgba(46,204,113,0.4)' : 'var(--border)'}`,
+                    color: r.started ? '#2ecc71' : 'rgba(255,255,255,0.4)',
+                  }}>
+                    {r.started ? '● En curso / finalizada' : `🔒 Inicia ${new Date(r.startsAt).toLocaleDateString('es', { day: '2-digit', month: 'short' })}`}
+                  </span>
+                  {r.sent && (
+                    <span style={{
+                      fontFamily: "'Barlow Condensed'", fontSize: '0.72rem', letterSpacing: '1px', padding: '2px 8px', borderRadius: '4px',
+                      background: 'rgba(52,152,219,0.12)', border: '1px solid rgba(52,152,219,0.4)', color: '#5b9ef4',
+                    }}>
+                      ✓ Resumen enviado
+                    </span>
+                  )}
+                  <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto', flexWrap: 'wrap' }}>
+                    <button onClick={() => previewRound(r.key)} className="btn-sm" style={{ fontSize: '0.72rem' }}>👁 Vista previa</button>
+                    <button
+                      onClick={() => sendEmail(true, r.key)}
+                      disabled={emailLoading || !r.started}
+                      className="btn-sm"
+                      style={{ fontSize: '0.72rem', opacity: r.started ? 1 : 0.4, cursor: r.started ? 'pointer' : 'not-allowed', color: '#F5A623' }}
+                    >✉️ Prueba</button>
+                    <button
+                      onClick={() => sendEmail(false, r.key)}
+                      disabled={emailLoading || !r.started}
+                      className="btn-sm"
+                      style={{ fontSize: '0.72rem', opacity: r.started ? 1 : 0.4, cursor: r.started ? 'pointer' : 'not-allowed', color: '#2ecc71' }}
+                    >📤 Enviar a inscritos</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* PREVIEW */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+              <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)' }}>
+                VISTA PREVIA — {previewKey ? `Eliminatorias: ${koPreview?.subject || ''}` : 'Resumen semanal'}
+              </div>
+              {previewKey && (
+                <button onClick={() => previewRound(null)} className="btn-sm" style={{ fontSize: '0.7rem' }}>↩ Ver resumen semanal</button>
+              )}
+            </div>
+            {(previewKey ? koPreview?.html : emailPreview?.html) ? (
               <iframe
                 title="Vista previa del correo"
-                srcDoc={emailPreview.html}
+                srcDoc={previewKey ? koPreview.html : emailPreview.html}
                 style={{ width: '100%', height: '720px', border: '1px solid var(--border)', borderRadius: '10px', background: '#0a0e1a' }}
               />
             ) : (

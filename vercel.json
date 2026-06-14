@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/sync",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/weekly-email",
+      "schedule": "0 22 * * 0"
+    },
+    {
+      "path": "/api/cron/knockout-email",
+      "schedule": "0 9 * * *"
     }
   ]
 }
