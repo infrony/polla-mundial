@@ -1,20 +1,21 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
 import GroupsGrid from '@/components/GroupsGrid';
-import { fetchAllGroupStandings } from '@/lib/football-api';
+import { getSession } from '@/lib/session';
+import { getGroupResults, getCachedGroupStandings } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 export default async function GruposPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
-  const [gPicksRes, gResultsRes, standings, userRes] = await Promise.all([
+  const [gPicksRes, gResultsRows, standings, userRes] = await Promise.all([
     query('SELECT group_key, first_team, second_team FROM group_picks WHERE user_id = $1', [session.user.id]),
-    query('SELECT group_key, first_team, second_team FROM group_results'),
-    fetchAllGroupStandings().catch(() => ({})),
+    getGroupResults(),
+    getCachedGroupStandings().catch(() => ({})),
     query('SELECT group_picks_unlocked FROM users WHERE id = $1', [session.user.id]),
   ]);
+
+  const gResultsRes = { rows: gResultsRows };
 
   const initialPicks = {};
   gPicksRes.rows.forEach(r => { initialPicks[r.group_key] = { first: r.first_team, second: r.second_team }; });

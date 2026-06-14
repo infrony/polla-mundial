@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { query } from '@/lib/db';
 import AdminPanel from './AdminPanel';
@@ -7,7 +6,7 @@ import AdminPanel from './AdminPanel';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) redirect('/login');
   if (!session.user.isAdmin) redirect('/partidos');
 

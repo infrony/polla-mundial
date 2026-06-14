@@ -1,23 +1,23 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { matches } from '@/lib/data';
 import MatchesList from '@/components/MatchesList';
-import { fetchGameTimes } from '@/lib/football-api';
+import { getSession } from '@/lib/session';
+import { getMatchResults, getCachedGameTimes } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PartidosPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
-  const [picksRes, resultsRes, userRes, gameTimesRaw] = await Promise.all([
+  const [picksRes, resultsRows, userRes, gameTimesRaw] = await Promise.all([
     query('SELECT match_id, pick FROM picks WHERE user_id = $1', [session.user.id]),
-    query('SELECT match_id, result, score_t1, score_t2, match_status FROM match_results').catch(
-      () => query('SELECT match_id, result FROM match_results')
-    ),
+    getMatchResults(),
     query('SELECT picks_unlocked FROM users WHERE id = $1', [session.user.id]),
-    fetchGameTimes(),
+    getCachedGameTimes(),
   ]);
+
+  // Reshape to match previous structure
+  const resultsRes = { rows: resultsRows };
 
   const initialPicks = {};
   picksRes.rows.forEach(r => { initialPicks[r.match_id] = r.pick; });

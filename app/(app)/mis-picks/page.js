@@ -1,19 +1,22 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { matches, groups } from '@/lib/data';
+import { getSession } from '@/lib/session';
+import { getMatchResults, getGroupResults } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 export default async function MisPicksPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
-  const [picksRes, gPicksRes, resultsRes, gResultsRes] = await Promise.all([
+  const [picksRes, gPicksRes, resultsRows, gResultsRows] = await Promise.all([
     query('SELECT match_id, pick FROM picks WHERE user_id = $1', [session.user.id]),
     query('SELECT group_key, first_team, second_team FROM group_picks WHERE user_id = $1', [session.user.id]),
-    query('SELECT match_id, result FROM match_results'),
-    query('SELECT group_key, first_team, second_team FROM group_results'),
+    getMatchResults(),
+    getGroupResults(),
   ]);
+
+  const resultsRes = { rows: resultsRows };
+  const gResultsRes = { rows: gResultsRows };
 
   const picks = {};
   picksRes.rows.forEach(r => { picks[r.match_id] = r.pick; });

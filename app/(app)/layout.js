@@ -1,13 +1,12 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import AppNav from '@/components/AppNav';
 import LogoutButton from '@/components/LogoutButton';
 import Countdown from '@/components/Countdown';
 import { query } from '@/lib/db';
+import { getSession } from '@/lib/session';
 
 export default async function AppLayout({ children }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) redirect('/login');
 
   // Fetch real-time points for header

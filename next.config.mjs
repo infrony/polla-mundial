@@ -5,12 +5,11 @@ const nextConfig = {
     domains: ['lh3.googleusercontent.com'],
   },
   experimental: {
-    // No reutilizar el Router Cache en memoria al navegar con <Link>:
-    // las páginas dinámicas (admin, etc.) siempre vuelven a leer datos frescos
-    // del servidor en vez de mostrar el payload RSC cacheado de antes.
+    // Client-side router cache: re-use RSC payloads for 30s on dynamic pages,
+    // 3min on static. Eliminates a full server roundtrip on quick back-navigation.
     staleTimes: {
-      dynamic: 0,
-      static: 0,
+      dynamic: 30,
+      static: 180,
     },
   },
   async headers() {

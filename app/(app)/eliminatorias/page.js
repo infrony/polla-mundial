@@ -1,21 +1,22 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
 import KnockoutView from '@/components/KnockoutView';
+import { getSession } from '@/lib/session';
+import { getKnockoutMatches, getKnockoutResults } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 export default async function EliminatoriasPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
-  const [matchesRes, picksRes, resultsRes, userRes] = await Promise.all([
-    query(`SELECT id, round, match_number, team1, team2, match_date, locked, picks_open_from FROM knockout_matches ORDER BY
-           CASE round WHEN 'r32' THEN 1 WHEN 'r16' THEN 2 WHEN 'qf' THEN 3 WHEN 'sf' THEN 4 WHEN '3rd' THEN 5 WHEN 'final' THEN 6 END,
-           match_number`),
+  const [koMatches, picksRes, koResults, userRes] = await Promise.all([
+    getKnockoutMatches(),
     query(`SELECT match_id, pick FROM knockout_picks WHERE user_id = $1`, [session.user.id]),
-    query(`SELECT match_id, winner FROM knockout_results`),
+    getKnockoutResults(),
     query(`SELECT paid_knockout FROM users WHERE id = $1`, [session.user.id]),
   ]);
+
+  const matchesRes = { rows: koMatches };
+  const resultsRes = { rows: koResults };
 
   const paidKnockout = userRes.rows[0]?.paid_knockout ?? false;
 

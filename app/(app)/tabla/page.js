@@ -1,6 +1,5 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
+import { getSession } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +17,7 @@ function medal(i) {
 }
 
 export default async function TablaPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   const res = await query(`
     SELECT
