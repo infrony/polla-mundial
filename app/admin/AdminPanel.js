@@ -3,6 +3,15 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { matches, groups } from '@/lib/data';
 import Link from 'next/link';
 
+const ADMIN_TABS = [
+  { key: 'users',    icon: '👥', label: 'Participantes',     short: 'Usuarios'  },
+  { key: 'matches',  icon: '⚽', label: 'Resultados Partidos', short: 'Partidos' },
+  { key: 'groups',   icon: '🏆', label: 'Resultados Grupos',  short: 'Grupos'   },
+  { key: 'knockout', icon: '🥇', label: 'Eliminatorias',      short: 'Elim.'    },
+  { key: 'sync',     icon: '🔄', label: 'Sync API',           short: 'Sync'     },
+  { key: 'email',    icon: '📧', label: 'Correos',            short: 'Correos'  },
+];
+
 const KNOCKOUT_ROUNDS = [
   { key: 'r32',   label: 'Dieciseisavos de Final', pts: 1  },
   { key: 'r16',   label: 'Octavos de Final',        pts: 2  },
@@ -56,6 +65,10 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   const [toast, setToast] = useState('');
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
+  const adminNavRef  = useRef(null);
+  const adminBtnRefs = useRef([]);
+  const [adminPill, setAdminPill] = useState({ left: 0, width: 0, ready: false });
+  const adminFirstRender = useRef(true);
   const [syncLogs, setSyncLogs] = useState([]);
   const [syncLoading, setSyncLoading] = useState(false);
   const [emailPreview, setEmailPreview] = useState(null);   // weekly preview + rounds list
@@ -73,6 +86,18 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   useEffect(() => {
     if (activeTab === 'email') loadEmailPreview();
   }, [activeTab, loadEmailPreview]);
+
+  useEffect(() => {
+    const idx = ADMIN_TABS.findIndex(t => t.key === activeTab);
+    if (idx === -1) return;
+    const nav = adminNavRef.current;
+    const btn = adminBtnRefs.current[idx];
+    if (!nav || !btn) return;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    setAdminPill({ left: btnRect.left - navRect.left, width: btnRect.width, ready: true });
+    adminFirstRender.current = false;
+  }, [activeTab]);
 
   async function previewRound(roundKey) {
     if (!roundKey) { setPreviewKey(null); return; }
@@ -285,11 +310,37 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
         </div>
       </header>
 
+      {/* ── Mobile bottom nav (admin tabs) ── */}
+      <nav className="admin-mobile-nav" ref={adminNavRef}>
+        {adminPill.ready && (
+          <span
+            className="nav-slider"
+            style={{
+              left: adminPill.left,
+              width: adminPill.width,
+              transition: adminFirstRender.current ? 'none' : 'left 0.3s cubic-bezier(0.34,1.56,0.64,1), width 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+            }}
+          />
+        )}
+        {ADMIN_TABS.map((t, i) => (
+          <button
+            key={t.key}
+            ref={el => { adminBtnRefs.current[i] = el; }}
+            onClick={() => setActiveTab(t.key)}
+            className={`admin-mobile-btn${activeTab === t.key ? ' active' : ''}`}
+          >
+            <span className="nav-icon">{t.icon}</span>
+            <span className="nav-label">{t.short}</span>
+          </button>
+        ))}
+      </nav>
+
       <div className="admin-wrapper">
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {['users','matches','groups','knockout','sync','email'].map(t => (
-            <button key={t} onClick={() => setActiveTab(t)} className="filter-btn" style={activeTab === t ? { borderColor: 'var(--gold)', color: 'var(--gold)', background: 'rgba(255,255,255,0.06)' } : {}}>
-              {t === 'users' ? '👥 Participantes' : t === 'matches' ? '⚽ Resultados Partidos' : t === 'groups' ? '🏆 Resultados Grupos' : t === 'knockout' ? '🥇 Eliminatorias' : t === 'sync' ? '🔄 Sync API' : '📧 Correos'}
+        {/* Desktop tab bar — hidden on mobile */}
+        <div className="admin-tab-bar">
+          {ADMIN_TABS.map(t => (
+            <button key={t.key} onClick={() => setActiveTab(t.key)} className="filter-btn" style={activeTab === t.key ? { borderColor: 'var(--gold)', color: 'var(--gold)', background: 'rgba(255,255,255,0.06)' } : {}}>
+              {t.icon} {t.label}
             </button>
           ))}
         </div>

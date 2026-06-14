@@ -164,6 +164,77 @@ nav::-webkit-scrollbar { display: none; }
   .nav-btn { z-index: 1; }
 }
 
+/* === ADMIN MOBILE NAV === */
+.admin-mobile-nav {
+  display: none; /* desktop: hidden */
+}
+.admin-tab-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .admin-tab-bar { display: none; }
+
+  .admin-mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 110;
+    justify-content: space-around;
+    border-top: 2px solid var(--red);
+    background: rgba(13, 13, 26, 0.97);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.55);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  .admin-mobile-btn {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 2px;
+    border: none;
+    border-radius: 12px;
+    background: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.56rem;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+  }
+  .admin-mobile-btn .nav-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+  .admin-mobile-btn.active {
+    color: var(--gold);
+    background: rgba(245, 166, 35, 0.13);
+  }
+  /* Pill slider reused via JS — same as AppNav */
+  .admin-mobile-nav .nav-slider {
+    display: block;
+    position: absolute;
+    top: 6px;
+    bottom: calc(6px + env(safe-area-inset-bottom));
+    border-radius: 14px;
+    background: rgba(245, 166, 35, 0.15);
+    border: 1px solid rgba(245, 166, 35, 0.35);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .admin-mobile-btn { z-index: 1; }
+  /* Content padding so last row isn't hidden behind the nav */
+  .admin-wrapper { padding-bottom: calc(var(--bottom-nav-h) + 16px); }
+}
+
 /* Floating countdown sits above the bottom nav on mobile */
 .floating-countdown { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; }
 @media (max-width: 600px) {

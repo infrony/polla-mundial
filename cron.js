@@ -4,7 +4,7 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const CRON_SECRET = process.env.CRON_SECRET || '';
-const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const INTERVAL_MS = 60 * 1000; // 1 minute
 const TOURNAMENT_START = new Date('2026-06-11T12:00:00Z');
 const TOURNAMENT_END   = new Date('2026-07-20T00:00:00Z');
 
