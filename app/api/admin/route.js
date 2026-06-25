@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
+import { syncGroupResults } from '@/lib/sync';
 
 async function checkAdmin(session) {
   if (!session?.user?.isAdmin) return false;
@@ -55,6 +56,7 @@ export async function POST(req) {
         [matchId, result, session.user.id]
       );
     }
+    await syncGroupResults().catch(() => {});
     return NextResponse.json({ ok: true });
   }
 
