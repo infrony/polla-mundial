@@ -1,5 +1,24 @@
 'use client';
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { groups } from '@/lib/data';
+
+// Build team-name → ISO code map from group definitions
+const TEAM_ISO = {};
+Object.values(groups).forEach(g => {
+  g.teams.forEach((team, i) => { TEAM_ISO[team] = g.iso[i]; });
+});
+
+function Flag({ team, size = 22 }) {
+  const iso = TEAM_ISO[team];
+  if (!iso) return null;
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${iso}.png`}
+      alt={team}
+      style={{ width: size, height: Math.round(size * 0.67), objectFit: 'cover', borderRadius: 2, flexShrink: 0 }}
+    />
+  );
+}
 
 const ROUNDS = [
   { key: 'r32',   label: 'Dieciseisavos de Final', pts: 1  },
@@ -149,15 +168,18 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
                 const matchResult = results[m.id];
                 const r90        = matchResult?.result90 ?? null;
                 const myPick     = picks[m.id];
-                const hasTeams   = m.team1 && m.team2;
+                const hasAnyTeam = m.team1 || m.team2;
+                const hasBothTeams = m.team1 && m.team2;
                 const matchOpen  = !m.picks_open_from || now >= new Date(m.picks_open_from).getTime();
-                const isLocked   = m.locked || !!r90 || !matchOpen || !paidKnockout;
+                // Picks need both teams confirmed + open + paid + not locked
+                const isLocked   = m.locked || !!r90 || !matchOpen || !paidKnockout || !hasBothTeams;
                 const isSaving   = saving[m.id];
 
                 let disabledReason = null;
-                if (!paidKnockout)   disabledReason = '🔒 Inscríbete por $10';
-                else if (!matchOpen) disabledReason = `🕐 Abre el ${fmtDate(m.picks_open_from)}`;
-                else if (m.locked)   disabledReason = '🔒 Cerrado';
+                if (!paidKnockout)    disabledReason = '🔒 Inscríbete por $10';
+                else if (!matchOpen)  disabledReason = `🕐 Abre el ${fmtDate(m.picks_open_from)}`;
+                else if (m.locked)    disabledReason = '🔒 Cerrado';
+                else if (!hasBothTeams && hasAnyTeam) disabledReason = '⏳ Equipo por definir';
 
                 return (
                   <div key={m.id} style={{
@@ -184,13 +206,13 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
                       )}
                     </div>
 
-                    {!hasTeams ? (
+                    {!hasAnyTeam ? (
                       <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.18)', fontFamily: "'Barlow Condensed'", fontSize: '0.8rem', padding: '8px 0' }}>
                         Equipos por definir
                       </div>
                     ) : (
                       <PickRow
-                        team1={m.team1} team2={m.team2}
+                        team1={m.team1 || null} team2={m.team2 || null}
                         myPick={myPick} result90={r90}
                         locked={isLocked} saving={isSaving}
                         onPick={p => handlePick(m.id, p)}
@@ -318,68 +340,79 @@ function RulesModal({ onClose }) {
   );
 }
 
-// Layout: [Team1 label] [1] [X] [2] [Team2 label]
 function PickRow({ team1, team2, myPick, result90, locked, saving, onPick }) {
   const options = [
-    { key: '1', label: '1', desc: team1 },
-    { key: 'x', label: 'X', desc: 'Empate' },
-    { key: '2', label: '2', desc: team2 },
+    { key: '1', team: team1 },
+    { key: 'x', team: null },
+    { key: '2', team: team2 },
   ];
 
   return (
-    <div>
-      {/* Team names row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-        <span style={{
-          fontFamily: "'Barlow Condensed'", fontSize: '0.78rem', fontWeight: 600,
-          color: result90 === '1' ? '#2ecc71' : result90 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)',
-          maxWidth: '42%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>{team1}</span>
-        <span style={{
-          fontFamily: "'Barlow Condensed'", fontSize: '0.78rem', fontWeight: 600,
-          color: result90 === '2' ? '#2ecc71' : result90 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)',
-          maxWidth: '42%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right',
-        }}>{team2}</span>
-      </div>
-      {/* 1 / X / 2 buttons */}
-      <div style={{ display: 'flex', gap: 6 }}>
-        {options.map(({ key, label }) => {
-          const isResult  = result90 === key;
-          const isWrong   = result90 && result90 !== key && myPick === key;
-          const isCorrect = result90 && result90 === key && myPick === key;
-          const isPicked  = myPick === key && !result90;
+    <div style={{ display: 'flex', gap: 6 }}>
+      {options.map(({ key, team }) => {
+        const isResult  = result90 === key;
+        const isWrong   = result90 && result90 !== key && myPick === key;
+        const isCorrect = result90 && result90 === key && myPick === key;
+        const isPicked  = myPick === key && !result90;
 
-          let bg     = 'rgba(255,255,255,0.04)';
-          let border = 'rgba(255,255,255,0.1)';
-          let color  = 'rgba(255,255,255,0.55)';
-          let opacity = 1;
+        let bg     = 'rgba(255,255,255,0.04)';
+        let border = 'rgba(255,255,255,0.1)';
+        let color  = 'rgba(255,255,255,0.55)';
+        let opacity = 1;
 
-          if (isCorrect) { bg = 'rgba(46,204,113,0.2)'; border = '#2ecc71'; color = '#2ecc71'; }
-          else if (isResult) { bg = 'rgba(46,204,113,0.1)'; border = 'rgba(46,204,113,0.5)'; color = '#2ecc71'; }
-          else if (isWrong)  { bg = 'rgba(200,16,46,0.1)';  border = 'rgba(200,16,46,0.4)';  color = '#ff6b7a'; }
-          else if (isPicked) { bg = 'rgba(0,61,165,0.25)';  border = '#5b9cf6'; color = '#fff'; }
+        if (isCorrect) { bg = 'rgba(46,204,113,0.2)'; border = '#2ecc71'; color = '#2ecc71'; }
+        else if (isResult) { bg = 'rgba(46,204,113,0.1)'; border = 'rgba(46,204,113,0.5)'; color = '#2ecc71'; }
+        else if (isWrong)  { bg = 'rgba(200,16,46,0.1)';  border = 'rgba(200,16,46,0.4)';  color = '#ff6b7a'; }
+        else if (isPicked) { bg = 'rgba(0,61,165,0.25)';  border = '#5b9cf6'; color = '#fff'; }
 
-          if (result90 && !isResult && !isWrong) opacity = 0.3;
+        if (result90 && !isResult && !isWrong) opacity = 0.3;
 
-          return (
-            <button
-              key={key}
-              onClick={() => !locked && onPick(key)}
-              disabled={locked || saving}
-              style={{
-                flex: 1, padding: '8px 4px', borderRadius: 8,
-                cursor: locked ? 'default' : 'pointer',
-                background: bg, border: `1px solid ${border}`, color,
-                fontFamily: "'Bebas Neue'", fontSize: '1rem', letterSpacing: '1px',
-                textAlign: 'center', transition: 'all 0.18s',
-                opacity, minWidth: 0,
-              }}
-            >
-              {saving && myPick === key ? '…' : label}
-            </button>
-          );
-        })}
-      </div>
+        const isX = key === 'x';
+        const iso = team ? TEAM_ISO[team] : null;
+
+        return (
+          <button
+            key={key}
+            onClick={() => !locked && onPick(key)}
+            disabled={locked || saving}
+            style={{
+              flex: key === 'x' ? 0.7 : 1,
+              padding: '8px 4px', borderRadius: 8,
+              cursor: locked ? 'default' : 'pointer',
+              background: bg, border: `1px solid ${border}`,
+              textAlign: 'center', transition: 'all 0.18s',
+              opacity, minWidth: 0,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+            }}
+          >
+            {saving && myPick === key ? (
+              <span style={{ color, fontSize: '0.85rem' }}>…</span>
+            ) : isX ? (
+              <span style={{ color, fontFamily: "'Bebas Neue'", fontSize: '0.9rem', letterSpacing: '1px' }}>Empate</span>
+            ) : team ? (
+              <>
+                {iso && (
+                  <img
+                    src={`https://flagcdn.com/w40/${iso}.png`}
+                    alt={team}
+                    style={{ width: 26, height: 18, objectFit: 'cover', borderRadius: 2 }}
+                  />
+                )}
+                <span style={{
+                  color, fontFamily: "'Barlow Condensed'", fontSize: '0.62rem',
+                  letterSpacing: '0.3px', lineHeight: 1.2,
+                  maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  padding: '0 2px',
+                }}>
+                  {team}
+                </span>
+              </>
+            ) : (
+              <span style={{ color: 'rgba(255,255,255,0.2)', fontFamily: "'Bebas Neue'", fontSize: '0.9rem' }}>?</span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
