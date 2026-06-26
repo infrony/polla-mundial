@@ -148,8 +148,10 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
     });
     const data = await res.json();
     if (res.ok) {
-      const nf = data.notFound?.length ? ` (${data.notFound.length} no encontrados)` : '';
-      showToast(`✅ ${data.matchesUpdated} partidos actualizados${nf} · ${data.requestsRemaining ?? '?'} requests restantes`);
+      const nf = data.notFound?.length ? ` (${data.notFound.length} no enc.)` : '';
+      const ga = data.groupsAutoUpdated?.length ? ` · Grupos: ${data.groupsAutoUpdated.join(',')}` : '';
+      const ka = data.knockoutAutoUpdated?.length ? ` · KO: ${data.knockoutAutoUpdated.length} acción(es)` : '';
+      showToast(`✅ ${data.matchesUpdated} partidos${nf}${ga}${ka}`);
       await loadSyncLogs();
     } else {
       showToast(`❌ ${data.error}`);

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 const ROUNDS = [
   { key: 'r32',   label: 'Dieciseisavos de Final', pts: 1  },
@@ -26,8 +26,9 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
     initialResults.forEach(r => { m[r.match_id] = r.winner; });
     return m;
   });
-  const [saving, setSaving] = useState({});
-  const [toast,  setToast]  = useState('');
+  const [saving,     setSaving]     = useState({});
+  const [toast,      setToast]      = useState('');
+  const [showRules,  setShowRules]  = useState(false);
   const toastRef = useRef(null);
 
   function showToast(msg) {
@@ -76,8 +77,11 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 16px 20px' }}>
+      {/* Rules modal */}
+      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+
       {/* Score summary */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'stretch' }}>
         {[
           { val: totalPts,                    lbl: 'Puntos',      color: '#F5A623', bg: 'rgba(245,166,35,0.1)',   border: 'rgba(245,166,35,0.3)' },
           { val: correct,                     lbl: 'Aciertos',    color: '#2ecc71', bg: 'rgba(46,204,113,0.08)',  border: 'rgba(46,204,113,0.25)' },
@@ -88,6 +92,19 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
             <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.65rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>{lbl}</div>
           </div>
         ))}
+        <button
+          onClick={() => setShowRules(true)}
+          title="Ver reglas"
+          style={{
+            background: 'rgba(91,156,246,0.08)', border: '1px solid rgba(91,156,246,0.25)',
+            borderRadius: 10, padding: '10px 16px', cursor: 'pointer', flexShrink: 0,
+            color: '#5b9cf6', fontFamily: "'Bebas Neue'", fontSize: '1.1rem', letterSpacing: '1px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+          }}
+        >
+          <span style={{ fontSize: '1.3rem', lineHeight: 1 }}>?</span>
+          <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.6rem', letterSpacing: '2px', color: 'rgba(91,156,246,0.7)', textTransform: 'uppercase' }}>Reglas</span>
+        </button>
       </div>
 
       {ROUNDS.map(({ key, label, pts }) => {
@@ -187,6 +204,115 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
       })}
 
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
+    </div>
+  );
+}
+
+function RulesModal({ onClose }) {
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  const rows = [
+    { round: 'Dieciseisavos (R32)', pts: 1,  icon: '⚽' },
+    { round: 'Octavos (R16)',        pts: 2,  icon: '⚽' },
+    { round: 'Cuartos de Final',     pts: 4,  icon: '🏅' },
+    { round: 'Semifinal',            pts: 6,  icon: '🥈' },
+    { round: '3° Puesto / Final',    pts: 8,  icon: '🏆' },
+  ];
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'rgb(18,18,31)', border: '1px solid rgba(91,156,246,0.3)',
+          borderRadius: 16, padding: '28px 24px', maxWidth: 480, width: '100%',
+          position: 'relative',
+        }}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute', top: 14, right: 14,
+            background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)',
+            cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1, padding: 4,
+          }}
+        >✕</button>
+
+        <h2 style={{ fontFamily: "'Bebas Neue'", fontSize: '1.4rem', letterSpacing: '3px', color: '#fff', margin: '0 0 4px' }}>
+          🏆 Reglas — Fase Eliminatoria
+        </h2>
+        <p style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', margin: '0 0 20px', letterSpacing: '0.5px' }}>
+          Cómo ganar puntos en la fase eliminatoria
+        </p>
+
+        {/* How it works */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: '#5b9cf6', textTransform: 'uppercase', marginBottom: 10 }}>
+            ¿Cómo funciona?
+          </div>
+          <ul style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {[
+              'Elige al equipo que crees que ganará cada partido.',
+              'El ganador se determina al finalizar los 90 minutos reglamentarios.',
+              'Si aciertas, ganas los puntos de esa ronda.',
+              'Los picks se habilitan ronda por ronda, antes del inicio de cada fase.',
+              'Una vez que el partido empieza, tu pick queda bloqueado.',
+            ].map((txt, i) => (
+              <li key={i} style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>
+                {txt}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Points table */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', letterSpacing: '2px', color: '#5b9cf6', textTransform: 'uppercase', marginBottom: 10 }}>
+            Puntos por ronda
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {rows.map(({ round, pts, icon }) => (
+              <div key={round} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 8, padding: '8px 14px',
+              }}>
+                <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)' }}>
+                  {icon} {round}
+                </span>
+                <span style={{
+                  fontFamily: "'Bebas Neue'", fontSize: '1rem', color: '#F5A623',
+                  background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.25)',
+                  borderRadius: 20, padding: '1px 12px', letterSpacing: '1px',
+                }}>
+                  +{pts} {pts === 1 ? 'pt' : 'pts'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Inscription note */}
+        <div style={{
+          background: 'rgba(245,166,35,0.07)', border: '1px solid rgba(245,166,35,0.2)',
+          borderRadius: 10, padding: '10px 14px',
+          fontFamily: "'Barlow Condensed'", fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5,
+        }}>
+          <strong style={{ color: '#F5A623' }}>Inscripción:</strong> Para participar en la fase eliminatoria debes pagar <strong style={{ color: '#F5A623' }}>$10</strong> al administrador. Tus picks solo cuentan si estás inscrito.
+        </div>
+      </div>
     </div>
   );
 }
