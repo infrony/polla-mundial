@@ -21,7 +21,7 @@ export default async function AdminPage() {
     query(`SELECT id, round, match_number, team1, team2, match_date, locked FROM knockout_matches ORDER BY
            CASE round WHEN 'r32' THEN 1 WHEN 'r16' THEN 2 WHEN 'qf' THEN 3 WHEN 'sf' THEN 4 WHEN '3rd' THEN 5 WHEN 'final' THEN 6 END,
            match_number`),
-    query('SELECT match_id, winner FROM knockout_results'),
+    query('SELECT match_id, winner, result_90 FROM knockout_results'),
   ]);
 
   return (

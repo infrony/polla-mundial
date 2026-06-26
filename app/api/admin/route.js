@@ -97,16 +97,19 @@ export async function POST(req) {
   }
 
   if (body.type === 'knockout_result') {
-    const { matchId, winner } = body;
+    const { matchId, result90, winner } = body;
     if (!matchId) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
-    if (!winner) {
+    if (!result90) {
       await query(`DELETE FROM knockout_results WHERE match_id = $1`, [matchId]);
     } else {
+      if (!['1','x','2'].includes(result90)) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
       await query(
-        `INSERT INTO knockout_results (match_id, winner, entered_by, entered_at)
-         VALUES ($1, $2, $3, NOW())
-         ON CONFLICT (match_id) DO UPDATE SET winner = EXCLUDED.winner, entered_by = EXCLUDED.entered_by, entered_at = NOW()`,
-        [matchId, winner, session.user.id]
+        `INSERT INTO knockout_results (match_id, winner, result_90, entered_by, entered_at)
+         VALUES ($1, $2, $3, $4, NOW())
+         ON CONFLICT (match_id) DO UPDATE
+           SET winner = EXCLUDED.winner, result_90 = EXCLUDED.result_90,
+               entered_by = EXCLUDED.entered_by, entered_at = NOW()`,
+        [matchId, winner || null, result90, session.user.id]
       );
     }
     return NextResponse.json({ ok: true });

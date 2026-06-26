@@ -59,7 +59,7 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   });
   const [koResults, setKoResults] = useState(() => {
     const m = {};
-    (initialKOR || []).forEach(x => { m[x.match_id] = x.winner; });
+    (initialKOR || []).forEach(x => { m[x.match_id] = { winner: x.winner, result90: x.result_90 }; });
     return m;
   });
   const [toast, setToast] = useState('');
@@ -247,14 +247,15 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
     else showToast('❌ Error al guardar');
   }
 
-  async function saveKOResult(matchId, winner) {
-    setKoResults(r => ({ ...r, [matchId]: winner || undefined }));
+  async function saveKOResult(matchId, result90, team1, team2) {
+    const winner = result90 === '1' ? team1 : result90 === '2' ? team2 : null;
+    setKoResults(r => ({ ...r, [matchId]: result90 ? { winner, result90 } : undefined }));
     const res = await fetch('/api/admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'knockout_result', matchId, winner }),
+      body: JSON.stringify({ type: 'knockout_result', matchId, result90, winner }),
     });
-    if (res.ok) showToast(winner ? '✅ Resultado guardado' : '🗑 Resultado eliminado');
+    if (res.ok) showToast(result90 ? '✅ Resultado guardado' : '🗑 Resultado eliminado');
     else showToast('❌ Error al guardar');
   }
 
@@ -679,7 +680,7 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                     <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', fontFamily: "'Barlow Condensed'", letterSpacing: '1px' }}>+{pts} pts por acierto</span>
                   </div>
                   {roundMatches.map(m => {
-                    const winner = koResults[m.id];
+                    const koResult = koResults[m.id];
                     const locked = m.locked;
                     return (
                       <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
@@ -698,13 +699,14 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                         {m.team1 && m.team2 && (
                           <select
                             className="result-input"
-                            value={winner || ''}
-                            onChange={e => saveKOResult(m.id, e.target.value)}
-                            style={{ minWidth: 140 }}
+                            value={koResult?.result90 || ''}
+                            onChange={e => saveKOResult(m.id, e.target.value, m.team1, m.team2)}
+                            style={{ minWidth: 160 }}
                           >
                             <option value="">Sin resultado</option>
-                            <option value={m.team1}>{m.team1}</option>
-                            <option value={m.team2}>{m.team2}</option>
+                            <option value="1">1 — {m.team1}</option>
+                            <option value="x">X — Empate</option>
+                            <option value="2">2 — {m.team2}</option>
                           </select>
                         )}
                         <button

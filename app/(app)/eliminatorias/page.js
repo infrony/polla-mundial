@@ -1,7 +1,7 @@
 import { query } from '@/lib/db';
 import KnockoutView from '@/components/KnockoutView';
 import { getSession } from '@/lib/session';
-import { getKnockoutMatches, getKnockoutResults } from '@/lib/cache';
+import { getKnockoutMatches } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,12 +11,9 @@ export default async function EliminatoriasPage() {
   const [koMatches, picksRes, koResults, userRes] = await Promise.all([
     getKnockoutMatches(),
     query(`SELECT match_id, pick FROM knockout_picks WHERE user_id = $1`, [session.user.id]),
-    getKnockoutResults(),
+    query(`SELECT match_id, winner, result_90 FROM knockout_results`),
     query(`SELECT paid_knockout FROM users WHERE id = $1`, [session.user.id]),
   ]);
-
-  const matchesRes = { rows: koMatches };
-  const resultsRes = { rows: koResults };
 
   const paidKnockout = userRes.rows[0]?.paid_knockout ?? false;
 
@@ -67,9 +64,9 @@ export default async function EliminatoriasPage() {
       </div>
 
       <KnockoutView
-        initialMatches={matchesRes.rows}
+        initialMatches={koMatches}
         initialPicks={picksRes.rows}
-        initialResults={resultsRes.rows}
+        initialResults={koResults.rows}
         paidKnockout={paidKnockout}
       />
     </div>

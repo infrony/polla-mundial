@@ -23,7 +23,7 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
   });
   const [results, setResults] = useState(() => {
     const m = {};
-    initialResults.forEach(r => { m[r.match_id] = r.winner; });
+    initialResults.forEach(r => { m[r.match_id] = { winner: r.winner, result90: r.result_90 }; });
     return m;
   });
   const [saving,     setSaving]     = useState({});
@@ -37,17 +37,17 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
     toastRef.current = setTimeout(() => setToast(''), 2500);
   }
 
-  const handlePick = useCallback(async (matchId, team) => {
+  const handlePick = useCallback(async (matchId, pick) => {
     if (!paidKnockout) { showToast('Necesitas inscribirte ($10) para participar.'); return; }
     const prev = picks[matchId];
-    if (prev === team) return;
+    if (prev === pick) return;
     setSaving(s => ({ ...s, [matchId]: true }));
-    setPicks(p => ({ ...p, [matchId]: team }));
+    setPicks(p => ({ ...p, [matchId]: pick }));
     try {
       const res = await fetch('/api/knockout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId, pick: team }),
+        body: JSON.stringify({ matchId, pick }),
       });
       if (!res.ok) throw new Error();
     } catch {
@@ -66,8 +66,8 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
 
   let totalPts = 0, correct = 0;
   initialMatches.forEach(m => {
-    const winner = results[m.id];
-    if (winner && picks[m.id] === winner) {
+    const r90 = results[m.id]?.result90;
+    if (r90 && picks[m.id] === r90) {
       totalPts += ROUNDS.find(r => r.key === m.round)?.pts ?? 1;
       correct++;
     }
@@ -146,25 +146,25 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
               {roundMatches.map(m => {
-                const winner   = results[m.id];
-                const myPick   = picks[m.id];
-                const hasTeams = m.team1 && m.team2;
-                const matchOpen = !m.picks_open_from || now >= new Date(m.picks_open_from).getTime();
-                const isLocked  = m.locked || !!winner || !matchOpen || !paidKnockout;
-                const isSaving  = saving[m.id];
+                const matchResult = results[m.id];
+                const r90        = matchResult?.result90 ?? null;
+                const myPick     = picks[m.id];
+                const hasTeams   = m.team1 && m.team2;
+                const matchOpen  = !m.picks_open_from || now >= new Date(m.picks_open_from).getTime();
+                const isLocked   = m.locked || !!r90 || !matchOpen || !paidKnockout;
+                const isSaving   = saving[m.id];
 
-                // Label for disabled state
                 let disabledReason = null;
-                if (!paidKnockout)  disabledReason = '🔒 Inscríbete por $10';
+                if (!paidKnockout)   disabledReason = '🔒 Inscríbete por $10';
                 else if (!matchOpen) disabledReason = `🕐 Abre el ${fmtDate(m.picks_open_from)}`;
                 else if (m.locked)   disabledReason = '🔒 Cerrado';
 
                 return (
                   <div key={m.id} style={{
                     background: 'rgba(18,18,31,0.9)',
-                    border: `1px solid ${winner ? 'rgba(46,204,113,0.2)' : !paidKnockout || !matchOpen ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'}`,
+                    border: `1px solid ${r90 ? 'rgba(46,204,113,0.2)' : !paidKnockout || !matchOpen ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'}`,
                     borderRadius: 10, padding: '12px 14px',
-                    opacity: (!paidKnockout || !matchOpen) && !winner ? 0.75 : 1,
+                    opacity: (!paidKnockout || !matchOpen) && !r90 ? 0.75 : 1,
                   }}>
                     {/* Match header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
@@ -176,8 +176,8 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
                           📅 {m.match_date}
                         </span>
                       )}
-                      {winner && <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.62rem', color: '#2ecc71', marginLeft: 'auto' }}>✓ Resultado</span>}
-                      {disabledReason && !winner && (
+                      {r90 && <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.62rem', color: '#2ecc71', marginLeft: 'auto' }}>✓ Resultado</span>}
+                      {disabledReason && !r90 && (
                         <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', marginLeft: 'auto' }}>
                           {disabledReason}
                         </span>
@@ -189,11 +189,12 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
                         Equipos por definir
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <TeamButton team={m.team1} pick={myPick} winner={winner} locked={isLocked} saving={isSaving} onClick={() => handlePick(m.id, m.team1)} />
-                        <div style={{ fontFamily: "'Bebas Neue'", fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>VS</div>
-                        <TeamButton team={m.team2} pick={myPick} winner={winner} locked={isLocked} saving={isSaving} onClick={() => handlePick(m.id, m.team2)} />
-                      </div>
+                      <PickRow
+                        team1={m.team1} team2={m.team2}
+                        myPick={myPick} result90={r90}
+                        locked={isLocked} saving={isSaving}
+                        onPick={p => handlePick(m.id, p)}
+                      />
                     )}
                   </div>
                 );
@@ -264,9 +265,9 @@ function RulesModal({ onClose }) {
           </div>
           <ul style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {[
-              'Elige al equipo que crees que ganará cada partido.',
-              'El ganador se determina al finalizar los 90 minutos reglamentarios.',
-              'Si aciertas, ganas los puntos de esa ronda.',
+              'Elige 1 (local gana), X (empate) o 2 (visitante gana) en cada partido.',
+              'El resultado se basa en los 90 minutos reglamentarios.',
+              'Si aciertas el resultado correcto, ganas los puntos de esa ronda.',
               'Los picks se habilitan ronda por ronda, antes del inicio de cada fase.',
               'Una vez que el partido empieza, tu pick queda bloqueado.',
             ].map((txt, i) => (
@@ -317,31 +318,68 @@ function RulesModal({ onClose }) {
   );
 }
 
-function TeamButton({ team, pick, winner, locked, saving, onClick }) {
-  const isSelected = pick === team;
-  const isWinner   = winner === team;
-  const isLoser    = winner && winner !== team;
-
-  let bg = 'rgba(255,255,255,0.04)', border = 'rgba(255,255,255,0.1)', color = 'rgba(255,255,255,0.7)';
-  if (isWinner)        { bg = 'rgba(46,204,113,0.15)'; border = '#2ecc71';  color = '#2ecc71'; }
-  else if (isLoser)    { /* handled via opacity below */ }
-  else if (isSelected) { bg = 'rgba(0,61,165,0.25)';  border = '#5b9cf6';  color = '#fff'; }
+// Layout: [Team1 label] [1] [X] [2] [Team2 label]
+function PickRow({ team1, team2, myPick, result90, locked, saving, onPick }) {
+  const options = [
+    { key: '1', label: '1', desc: team1 },
+    { key: 'x', label: 'X', desc: 'Empate' },
+    { key: '2', label: '2', desc: team2 },
+  ];
 
   return (
-    <button
-      onClick={onClick}
-      disabled={locked || saving}
-      style={{
-        flex: 1, padding: '9px 8px', borderRadius: 8,
-        cursor: locked ? 'default' : 'pointer',
-        background: bg, border: `1px solid ${border}`, color,
-        fontFamily: "'Barlow Condensed'", fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.5px',
-        textAlign: 'center', transition: 'all 0.18s',
-        opacity: isLoser ? 0.3 : 1,
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-      }}
-    >
-      {saving ? '...' : team}
-    </button>
+    <div>
+      {/* Team names row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span style={{
+          fontFamily: "'Barlow Condensed'", fontSize: '0.78rem', fontWeight: 600,
+          color: result90 === '1' ? '#2ecc71' : result90 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)',
+          maxWidth: '42%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>{team1}</span>
+        <span style={{
+          fontFamily: "'Barlow Condensed'", fontSize: '0.78rem', fontWeight: 600,
+          color: result90 === '2' ? '#2ecc71' : result90 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)',
+          maxWidth: '42%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right',
+        }}>{team2}</span>
+      </div>
+      {/* 1 / X / 2 buttons */}
+      <div style={{ display: 'flex', gap: 6 }}>
+        {options.map(({ key, label }) => {
+          const isResult  = result90 === key;
+          const isWrong   = result90 && result90 !== key && myPick === key;
+          const isCorrect = result90 && result90 === key && myPick === key;
+          const isPicked  = myPick === key && !result90;
+
+          let bg     = 'rgba(255,255,255,0.04)';
+          let border = 'rgba(255,255,255,0.1)';
+          let color  = 'rgba(255,255,255,0.55)';
+          let opacity = 1;
+
+          if (isCorrect) { bg = 'rgba(46,204,113,0.2)'; border = '#2ecc71'; color = '#2ecc71'; }
+          else if (isResult) { bg = 'rgba(46,204,113,0.1)'; border = 'rgba(46,204,113,0.5)'; color = '#2ecc71'; }
+          else if (isWrong)  { bg = 'rgba(200,16,46,0.1)';  border = 'rgba(200,16,46,0.4)';  color = '#ff6b7a'; }
+          else if (isPicked) { bg = 'rgba(0,61,165,0.25)';  border = '#5b9cf6'; color = '#fff'; }
+
+          if (result90 && !isResult && !isWrong) opacity = 0.3;
+
+          return (
+            <button
+              key={key}
+              onClick={() => !locked && onPick(key)}
+              disabled={locked || saving}
+              style={{
+                flex: 1, padding: '8px 4px', borderRadius: 8,
+                cursor: locked ? 'default' : 'pointer',
+                background: bg, border: `1px solid ${border}`, color,
+                fontFamily: "'Bebas Neue'", fontSize: '1rem', letterSpacing: '1px',
+                textAlign: 'center', transition: 'all 0.18s',
+                opacity, minWidth: 0,
+              }}
+            >
+              {saving && myPick === key ? '…' : label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
