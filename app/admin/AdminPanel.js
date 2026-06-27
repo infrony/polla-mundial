@@ -670,6 +670,25 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
               ))}
             </div>
 
+            {/* Quick sync button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+              <button
+                onClick={() => runSync('today')}
+                disabled={syncLoading}
+                style={{
+                  padding: '8px 18px', borderRadius: 8, cursor: syncLoading ? 'not-allowed' : 'pointer',
+                  background: syncLoading ? 'rgba(255,255,255,0.04)' : 'rgba(91,156,246,0.12)',
+                  border: '1px solid rgba(91,156,246,0.4)', color: syncLoading ? 'rgba(255,255,255,0.3)' : '#5b9cf6',
+                  fontFamily: "'Barlow Condensed'", fontSize: '0.85rem', letterSpacing: '1px', transition: 'all 0.2s',
+                }}
+              >
+                {syncLoading ? '⏳ Sincronizando...' : '🔄 Poblar bracket desde API'}
+              </button>
+              <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>
+                Jala los equipos de R32 automáticamente si la API ya los tiene
+              </span>
+            </div>
+
             {/* Match setup + results per round */}
             {KNOCKOUT_ROUNDS.map(({ key, label, pts }) => {
               const roundMatches = Object.values(koMatches).filter(m => m.round === key).sort((a,b) => a.match_number - b.match_number);
@@ -689,12 +708,14 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                           placeholder="Equipo 1"
                           value={m.team1 || ''}
                           onBlur={val => saveKOTeams(m.id, val, m.team2 || '')}
+                          listId={`ko-t1-${m.id}`}
                         />
                         <span style={{ color: 'rgba(255,255,255,0.25)', fontFamily: "'Bebas Neue'", fontSize: '0.8rem' }}>vs</span>
                         <KOTeamInput
                           placeholder="Equipo 2"
                           value={m.team2 || ''}
                           onBlur={val => saveKOTeams(m.id, m.team1 || '', val)}
+                          listId={`ko-t2-${m.id}`}
                         />
                         {m.team1 && m.team2 && (
                           <select
@@ -1014,21 +1035,44 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   );
 }
 
-function KOTeamInput({ placeholder, value, onBlur }) {
+const ALL_TEAMS = [
+  'México','Sudáfrica','Corea del Sur','Rep. Checa',
+  'Canadá','Bosnia y H.','Catar','Suiza',
+  'Brasil','Marruecos','Haití','Escocia',
+  'EEUU','Paraguay','Australia','Turquía',
+  'Alemania','Curazao','C. de Marfil','Ecuador',
+  'Países Bajos','Japón','Suecia','Túnez',
+  'Bélgica','Egipto','Irán','N. Zelanda',
+  'España','Cabo Verde','A. Saudita','Uruguay',
+  'Francia','Senegal','Irak','Noruega',
+  'Argentina','Argelia','Austria','Jordania',
+  'Portugal','RD Congo','Uzbekistán','Colombia',
+  'Inglaterra','Croacia','Ghana','Panamá',
+];
+
+function KOTeamInput({ placeholder, value, onBlur, listId }) {
   const [local, setLocal] = useState(value);
   return (
-    <input
-      type="text"
-      value={local}
-      placeholder={placeholder}
-      onChange={e => setLocal(e.target.value)}
-      onBlur={() => { if (local !== value) onBlur(local); }}
-      style={{
-        flex: 1, minWidth: 110, maxWidth: 160, padding: '5px 10px', borderRadius: 6,
-        background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',
-        color: '#fff', fontFamily: "'Barlow Condensed'", fontSize: '0.82rem',
-        outline: 'none',
-      }}
-    />
+    <>
+      {listId && (
+        <datalist id={listId}>
+          {ALL_TEAMS.map(t => <option key={t} value={t} />)}
+        </datalist>
+      )}
+      <input
+        type="text"
+        list={listId}
+        value={local}
+        placeholder={placeholder}
+        onChange={e => setLocal(e.target.value)}
+        onBlur={() => { if (local !== value) onBlur(local); }}
+        style={{
+          flex: 1, minWidth: 110, maxWidth: 160, padding: '5px 10px', borderRadius: 6,
+          background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',
+          color: '#fff', fontFamily: "'Barlow Condensed'", fontSize: '0.82rem',
+          outline: 'none',
+        }}
+      />
+    </>
   );
 }

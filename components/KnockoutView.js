@@ -94,10 +94,25 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
 
   const now = Date.now();
 
+  const r32Matches = byRound['r32'] || [];
+  const r32HasAnyTeam = r32Matches.some(m => m.team1 || m.team2);
+  const r32AllEmpty = r32Matches.length > 0 && r32Matches.every(m => !m.team1 && !m.team2);
+
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 16px 20px' }}>
       {/* Rules modal */}
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+
+      {/* Banner: bracket pending */}
+      {paidKnockout && r32AllEmpty && (
+        <div style={{
+          background: 'rgba(91,156,246,0.07)', border: '1px solid rgba(91,156,246,0.25)',
+          borderRadius: 10, padding: '12px 16px', marginBottom: 20,
+          fontFamily: "'Barlow Condensed'", fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5,
+        }}>
+          <strong style={{ color: '#5b9cf6' }}>🏆 ¡Estás inscrito!</strong> Los partidos del R32 se están confirmando. Tan pronto el bracket esté listo podrás seleccionar tus picks. El primer partido es el <strong style={{ color: '#fff' }}>28 de junio</strong>.
+        </div>
+      )}
 
       {/* Score summary */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'stretch' }}>
@@ -157,8 +172,8 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
               )}
 
               {roundOpen && allEmpty && (
-                <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.65rem', letterSpacing: '1px', color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase' }}>
-                  Equipos por definir
+                <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.68rem', letterSpacing: '1px', color: 'rgba(245,166,35,0.7)', background: 'rgba(245,166,35,0.07)', border: '1px solid rgba(245,166,35,0.2)', borderRadius: 20, padding: '2px 10px' }}>
+                  ⏳ Confirmando clasificados...
                 </span>
               )}
             </div>
