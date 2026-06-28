@@ -21,7 +21,7 @@ const KNOCKOUT_ROUNDS = [
   { key: 'final', label: 'Gran Final',               pts: 8  },
 ];
 
-export default function AdminPanel({ users, picks: initialPicks, groupPicks: initialGPicks, results: initialResults, groupResults: initialGResults, knockoutMatches: initialKO, knockoutResults: initialKOR }) {
+export default function AdminPanel({ users, picks: initialPicks, groupPicks: initialGPicks, results: initialResults, groupResults: initialGResults, knockoutMatches: initialKO, knockoutResults: initialKOR, knockoutPicks: initialKOPicks }) {
   const [results, setResults] = useState(() => {
     const r = {};
     initialResults.forEach(x => { r[x.match_id] = x.result; });
@@ -60,6 +60,14 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
   const [koResults, setKoResults] = useState(() => {
     const m = {};
     (initialKOR || []).forEach(x => { m[x.match_id] = { winner: x.winner, result90: x.result_90 }; });
+    return m;
+  });
+  const [koPicks] = useState(() => {
+    const m = {};
+    (initialKOPicks || []).forEach(p => {
+      if (!m[p.user_id]) m[p.user_id] = {};
+      m[p.user_id][p.match_id] = p.pick;
+    });
     return m;
   });
   const [toast, setToast] = useState('');
@@ -748,6 +756,75 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
                 </div>
               );
             })}
+
+            {/* Knockout picks matrix */}
+            <div className="section-header" style={{ marginTop: 28 }}>
+              <h2>Picks por Participante</h2>
+              <span className="badge blue">Fase Eliminatoria</span>
+            </div>
+            <div className="table-scroll">
+              <table className="picks-table">
+                <thead>
+                  <tr>
+                    <th>Partido</th>
+                    <th>Resultado</th>
+                    {users.filter(u => u.paid_knockout).map(u => (
+                      <th key={u.id} title={u.email}>{u.name.split(' ')[0]}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {KNOCKOUT_ROUNDS.map(({ key, label }) => {
+                    const roundMatches = Object.values(koMatches).filter(m => m.round === key).sort((a,b) => a.match_number - b.match_number);
+                    const hasAnyMatch = roundMatches.some(m => m.team1 || m.team2);
+                    if (!hasAnyMatch) return null;
+                    return [
+                      <tr key={`header-${key}`}>
+                        <td colSpan={2 + users.filter(u => u.paid_knockout).length} style={{
+                          fontFamily: "'Bebas Neue'", fontSize: '0.8rem', letterSpacing: '2px',
+                          color: '#F5A623', background: 'rgba(245,166,35,0.06)',
+                          padding: '6px 10px', borderBottom: '1px solid rgba(245,166,35,0.15)',
+                        }}>
+                          {label}
+                        </td>
+                      </tr>,
+                      ...roundMatches.filter(m => m.team1 || m.team2).map(m => {
+                        const r90 = koResults[m.id]?.result90 ?? null;
+                        const teamLabel = m.team1 && m.team2
+                          ? `${m.team1.split(' ')[0]} vs ${m.team2.split(' ')[0]}`
+                          : m.team1 || m.team2 || `#${m.match_number}`;
+                        return (
+                          <tr key={m.id}>
+                            <td style={{ whiteSpace: 'nowrap', fontFamily: "'Barlow Condensed'", fontSize: '0.78rem' }}>
+                              <span style={{ color: 'rgba(255,255,255,0.3)', marginRight: 4 }}>#{m.match_number}</span>
+                              {teamLabel}
+                            </td>
+                            <td>
+                              {r90
+                                ? <span className={`pick-badge ${r90 === '1' ? 'p1' : r90 === 'x' ? 'px' : 'p2'}`}>{r90 === '1' ? '1' : r90 === 'x' ? 'X' : '2'}</span>
+                                : <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.7rem' }}>—</span>
+                              }
+                            </td>
+                            {users.filter(u => u.paid_knockout).map(u => {
+                              const pick = koPicks[u.id]?.[m.id];
+                              const isCorrect = pick && r90 && pick === r90;
+                              if (!pick) return <td key={u.id} style={{ color: 'rgba(255,255,255,0.15)' }}>—</td>;
+                              return (
+                                <td key={u.id}>
+                                  <span className={`pick-badge ${pick === '1' ? 'p1' : pick === 'x' ? 'px' : 'p2'}`} style={isCorrect ? { background: 'var(--success)', color: 'var(--dark)' } : {}}>
+                                    {pick === '1' ? '1' : pick === 'x' ? 'X' : '2'}
+                                  </span>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      }),
+                    ];
+                  })}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
 
@@ -1052,6 +1129,15 @@ const ALL_TEAMS = [
 
 function KOTeamInput({ placeholder, value, onBlur, listId }) {
   const [local, setLocal] = useState(value);
+  // Use a ref so onBlur always reads the latest value even when onChange and blur
+  // fire in the same React tick (happens when picking from a datalist suggestion).
+  const latestRef = useRef(value);
+
+  useEffect(() => {
+    setLocal(value);
+    latestRef.current = value;
+  }, [value]);
+
   return (
     <>
       {listId && (
@@ -1064,8 +1150,8 @@ function KOTeamInput({ placeholder, value, onBlur, listId }) {
         list={listId}
         value={local}
         placeholder={placeholder}
-        onChange={e => setLocal(e.target.value)}
-        onBlur={() => { if (local !== value) onBlur(local); }}
+        onChange={e => { latestRef.current = e.target.value; setLocal(e.target.value); }}
+        onBlur={() => { if (latestRef.current !== value) onBlur(latestRef.current); }}
         style={{
           flex: 1, minWidth: 110, maxWidth: 160, padding: '5px 10px', borderRadius: 6,
           background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',

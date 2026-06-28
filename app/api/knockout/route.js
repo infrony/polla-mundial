@@ -36,7 +36,7 @@ export async function POST(req) {
   if (!userRes.rows[0]?.paid_knockout) return NextResponse.json({ error: 'Inscripción requerida' }, { status: 403 });
 
   const matchRes = await query(
-    `SELECT km.id, km.team1, km.team2, km.locked, km.picks_open_from, kr.result_90
+    `SELECT km.id, km.team1, km.team2, km.locked, km.picks_open_from, km.locks_at, kr.result_90
      FROM knockout_matches km
      LEFT JOIN knockout_results kr ON kr.match_id = km.id
      WHERE km.id = $1`,
@@ -45,6 +45,7 @@ export async function POST(req) {
   const m = matchRes.rows[0];
   if (!m) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 });
   if (m.locked || m.result_90) return NextResponse.json({ error: 'Partido cerrado' }, { status: 403 });
+  if (m.locks_at && new Date(m.locks_at) <= new Date()) return NextResponse.json({ error: 'El partido ya comenzó' }, { status: 403 });
   if (m.picks_open_from && new Date(m.picks_open_from) > new Date()) return NextResponse.json({ error: 'Picks aún no disponibles' }, { status: 403 });
 
   await query(

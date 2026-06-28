@@ -185,14 +185,16 @@ export default function KnockoutView({ initialMatches, initialPicks, initialResu
                 const myPick     = picks[m.id];
                 const hasAnyTeam = m.team1 || m.team2;
                 const hasBothTeams = m.team1 && m.team2;
-                const matchOpen  = !m.picks_open_from || now >= new Date(m.picks_open_from).getTime();
-                // Picks need both teams confirmed + open + paid + not locked
-                const isLocked   = m.locked || !!r90 || !matchOpen || !paidKnockout || !hasBothTeams;
+                const matchOpen    = !m.picks_open_from || now >= new Date(m.picks_open_from).getTime();
+                const matchStarted = m.locks_at && now >= new Date(m.locks_at).getTime();
+                // Picks need both teams confirmed + open + paid + not locked + match not started
+                const isLocked   = m.locked || !!r90 || !matchOpen || matchStarted || !paidKnockout || !hasBothTeams;
                 const isSaving   = saving[m.id];
 
                 let disabledReason = null;
                 if (!paidKnockout)    disabledReason = '🔒 Inscríbete por $10';
                 else if (!matchOpen)  disabledReason = `🕐 Abre el ${fmtDate(m.picks_open_from)}`;
+                else if (matchStarted) disabledReason = '⏱ Partido en curso';
                 else if (m.locked)    disabledReason = '🔒 Cerrado';
                 else if (!hasBothTeams && hasAnyTeam) disabledReason = '⏳ Equipo por definir';
 

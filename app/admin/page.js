@@ -10,7 +10,7 @@ export default async function AdminPage() {
   if (!session) redirect('/login');
   if (!session.user.isAdmin) redirect('/partidos');
 
-  const [usersRes, picksRes, gPicksRes, resultsRes, gResultsRes, koMatchesRes, koResultsRes] = await Promise.all([
+  const [usersRes, picksRes, gPicksRes, resultsRes, gResultsRes, koMatchesRes, koResultsRes, koPicksRes] = await Promise.all([
     query(`SELECT id, name, email, image, provider, is_admin, paid, paid_knockout, picks_unlocked, group_picks_unlocked, created_at,
             (SELECT COUNT(*) FROM picks WHERE user_id = users.id) AS pick_count
            FROM users ORDER BY created_at`),
@@ -24,6 +24,7 @@ export default async function AdminPage() {
     query('SELECT match_id, winner, result_90 FROM knockout_results').catch(() =>
       query('SELECT match_id, winner FROM knockout_results')
     ),
+    query('SELECT user_id, match_id, pick FROM knockout_picks ORDER BY user_id, match_id').catch(() => ({ rows: [] })),
   ]);
 
   return (
@@ -35,6 +36,7 @@ export default async function AdminPage() {
       groupResults={gResultsRes.rows}
       knockoutMatches={koMatchesRes.rows}
       knockoutResults={koResultsRes.rows}
+      knockoutPicks={koPicksRes.rows}
     />
   );
 }
