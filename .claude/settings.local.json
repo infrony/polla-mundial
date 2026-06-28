@@ -21,7 +21,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:github.com)",
       "PowerShell(npm install *)",
-      "PowerShell(npm run *)"
+      "PowerShell(npm run *)",
+      "Bash(grep -v \"SECURITY WARNING\\\\|next major\\\\|To prepare\\\\|If you want\\\\|libpq\\\\|See https\\\\|trace-warnings\\\\|^$\")"
     ]
   }
 }
