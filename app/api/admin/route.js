@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
@@ -86,6 +87,7 @@ export async function POST(req) {
       `UPDATE knockout_matches SET team1 = $1, team2 = $2 WHERE id = $3`,
       [team1 || null, team2 || null, matchId]
     );
+    revalidateTag('knockout-matches');
     return NextResponse.json({ ok: true });
   }
 
@@ -93,6 +95,7 @@ export async function POST(req) {
     const { matchId, locked } = body;
     if (!matchId) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
     await query(`UPDATE knockout_matches SET locked = $1 WHERE id = $2`, [!!locked, matchId]);
+    revalidateTag('knockout-matches');
     return NextResponse.json({ ok: true });
   }
 
@@ -112,6 +115,8 @@ export async function POST(req) {
         [matchId, winner || null, result90, session.user.id]
       );
     }
+    revalidateTag('knockout-matches');
+    revalidateTag('knockout-results');
     return NextResponse.json({ ok: true });
   }
 
