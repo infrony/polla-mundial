@@ -678,22 +678,12 @@ export default function AdminPanel({ users, picks: initialPicks, groupPicks: ini
               ))}
             </div>
 
-            {/* Quick sync button */}
+            {/* Knockout API sync disabled: the API was returning wrong results
+                and team positions for eliminatorias, so this is now entered
+                manually below. */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-              <button
-                onClick={() => runSync('today')}
-                disabled={syncLoading}
-                style={{
-                  padding: '8px 18px', borderRadius: 8, cursor: syncLoading ? 'not-allowed' : 'pointer',
-                  background: syncLoading ? 'rgba(255,255,255,0.04)' : 'rgba(91,156,246,0.12)',
-                  border: '1px solid rgba(91,156,246,0.4)', color: syncLoading ? 'rgba(255,255,255,0.3)' : '#5b9cf6',
-                  fontFamily: "'Barlow Condensed'", fontSize: '0.85rem', letterSpacing: '1px', transition: 'all 0.2s',
-                }}
-              >
-                {syncLoading ? '⏳ Sincronizando...' : '🔄 Poblar bracket desde API'}
-              </button>
               <span style={{ fontFamily: "'Barlow Condensed'", fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>
-                Jala los equipos de R32 automáticamente si la API ya los tiene
+                Sincronización automática de eliminatorias desactivada — ingresa los resultados y equipos manualmente.
               </span>
             </div>
 
